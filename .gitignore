@@ -4,3 +4,4 @@ __pycache__
 .scraper
 .vscode
 *.pdf
+deploy_heroku.txt
