@@ -5,3 +5,4 @@ __pycache__
 .vscode
 *.pdf
 deploy_heroku.txt
+migrations
