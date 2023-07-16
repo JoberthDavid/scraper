@@ -6,7 +6,10 @@ from core.models import ModelFileCost, ModelComposition, ModelInput
 from django.contrib import messages
 from django.utils.translation import ngettext
 
+from core.tasks import process_file_in_background
 
+
+admin.site.site_header = "SICRO"
 admin.site.index_title = "API custos"
 admin.site.site_title = "Administração"
 
@@ -46,7 +49,7 @@ class ModelFileCostAdmin(admin.ModelAdmin):
         try:
             selected_object = self.select_object( queryset )
 
-            # process_file_in_background.delay( selected_object.id )
+            process_file_in_background.delay( selected_object.id )
 
             self.success_message_about_file_processing( request, queryset )
 

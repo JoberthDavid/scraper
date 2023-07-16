@@ -136,3 +136,11 @@ S3DIRECT_DESTINATIONS = {
         'key': 'pdf_uploaded/',
     },
 }
+
+# Configuração do Celery
+CELERY_BROKER_URL = "amqps://npqhyxyz:5DSyeeMk9rtHLUkUtXQpCs7gPZtBLGAN@toad.rmq.cloudamqp.com/npqhyxyz"
+
+# Configurações do RabbitMQ
+BROKER_URL = CELERY_BROKER_URL
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
