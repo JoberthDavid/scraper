@@ -1,10 +1,11 @@
-from core.usefuls.processing_file import FileProcessor
-from core.models import ModelFileCost
+from core.usefuls.processing_file import FileProcessor, FileXlsxProcessor
+from core.models import SourceFile, GenericItem
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
 from PyPDF2 import PdfReader
+import pandas as pd
 
 from io import BytesIO
 import boto3
@@ -17,10 +18,13 @@ logger = get_task_logger(__name__)
 def get_list_of_inputs_of_composition( pdf_content, page_selected: int ) -> list:
     return pdf_content.pages[page_selected].extract_text().split('\n')
 
-def extract_text_from_pdf_file( selected_object: ModelFileCost, page_dict: dict, num_pages: int ) -> None:
+def extract_text_from_pdf_file( selected_object: SourceFile, page_dict: dict, num_pages: int ) -> None:
     FileProcessor( selected_object=selected_object, page_dict=page_dict, num_pages=num_pages )
 
-def save_status_file( selected_object: ModelFileCost ) -> bool:
+def extract_text_from_xlsx_file( response, type_file, source_file ) -> None:
+    FileXlsxProcessor( response=response, type_file=type_file, source_file=source_file )
+
+def save_status_file( selected_object: SourceFile ) -> bool:
     try:
         selected_object.status=True
         selected_object.save()
@@ -31,21 +35,18 @@ def save_status_file( selected_object: ModelFileCost ) -> bool:
 @shared_task
 def process_file_in_background( id: int ) -> bool:
 
-    selected_object = ModelFileCost.objects.get(id=id)
-    key_file = str(selected_object.file)
+    selected_object = SourceFile.objects.get(id=id)
+    key_file = str(selected_object.source_file)
 
-    #streaming from AWS
     s3 = boto3.client("s3")
-    obj = s3.get_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=key_file)
-    pdf_content = PdfReader(BytesIO(obj['Body'].read()))
+    response = s3.get_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=key_file)
+    status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
 
-    num_pages = len(pdf_content.pages)
-    page_dict = {}
-
-    for page_selected in range(num_pages):
-        page_dict[page_selected] = get_list_of_inputs_of_composition( pdf_content, page_selected )
-
-    extract_text_from_pdf_file( selected_object=selected_object, page_dict=page_dict, num_pages=num_pages )
+    if status == 200:
+        print(f"Successful S3 get_object response. Status - {status}")
+    else:
+        print(f"Unsuccessful S3 get_object response. Status - {status}")
+    extract_text_from_xlsx_file( response=response, type_file=selected_object.type_file, source_file=selected_object )
 
     status_file = save_status_file( selected_object= selected_object )
 
