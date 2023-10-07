@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db.models import QuerySet
 from django.http import HttpRequest
-from core.models import ModelFileCost, ModelComposition, ModelInput
+from core.models import SourceFile, Composition, InputItem, GenericItem, GenericDescription
 
 from django.contrib import messages
 from django.utils.translation import ngettext
@@ -14,14 +14,14 @@ admin.site.index_title = "API custos"
 admin.site.site_title = "Administração"
 
 
-class ModelFileCostAdmin(admin.ModelAdmin):
+class SourceFileAdmin(admin.ModelAdmin):
 
     list_display = [ str, 'status']
     order_by = 'data_base'
     date_hierarchy = 'data_base'
     actions = ['process_file',]
 
-    def select_object(self, queryset: QuerySet) -> ModelFileCost:
+    def select_object(self, queryset: QuerySet) -> SourceFile:
         return queryset.filter(status=False).first()
             
     def success_message_about_file_processing( self, request: HttpRequest, queryset: QuerySet) -> None:
@@ -57,19 +57,38 @@ class ModelFileCostAdmin(admin.ModelAdmin):
             self.warning_message_about_file_processing( request, queryset )
             
 
-class ModelCompositionAdmin(admin.ModelAdmin):
+class CompositionAdmin(admin.ModelAdmin):
 
-    order_by = 'file_cost'
-    list_filter = ['file_cost','main_composition_group',]
+    order_by = 'source_file'
+    list_filter = ['source_file','main_composition_group',]
     search_fields = ['composition_code']
 
 
-class ModelInputAdmin(admin.ModelAdmin):
+class InputItemAdmin(admin.ModelAdmin):
 
     order_by = 'related_composition'
-    list_filter = ['related_composition__file_cost','main_input_group','related_composition__main_composition_group']
+    list_filter = ['related_composition__source_file','main_input_group','related_composition__main_composition_group',]
     search_fields = ['related_composition__composition_code',]
 
-admin.site.register(ModelFileCost, ModelFileCostAdmin)
-admin.site.register(ModelComposition, ModelCompositionAdmin)
-admin.site.register(ModelInput, ModelInputAdmin)
+
+class GenericItemAdmin(admin.ModelAdmin):
+
+    order_by = 'code'
+    list_display = [ 'code', 'unit']
+    search_fields = ['code',]
+    list_filter = [ 'source_files', 'unit', 'group',]
+
+
+class GenericDescriptionAdmin(admin.ModelAdmin):
+
+    order_by = 'generic_item'
+    list_display = [ 'generic_item', 'description' ]
+    search_fields = [ 'description',]
+    list_filter = [ 'source_files',]
+
+
+admin.site.register(GenericDescription, GenericDescriptionAdmin)
+admin.site.register(GenericItem, GenericItemAdmin)
+admin.site.register(SourceFile, SourceFileAdmin)
+admin.site.register(Composition, CompositionAdmin)
+admin.site.register(InputItem, InputItemAdmin)
