@@ -1,4 +1,4 @@
-from core.usefuls.processing_file import FileProcessor, FileXlsxProcessor
+from core.usefuls.processing_file import FileXlsxProcessor
 from core.models import SourceFile, GenericItem
 
 from celery import shared_task
@@ -17,9 +17,6 @@ logger = get_task_logger(__name__)
 
 def get_list_of_inputs_of_composition( pdf_content, page_selected: int ) -> list:
     return pdf_content.pages[page_selected].extract_text().split('\n')
-
-def extract_text_from_pdf_file( selected_object: SourceFile, page_dict: dict, num_pages: int ) -> None:
-    FileProcessor( selected_object=selected_object, page_dict=page_dict, num_pages=num_pages )
 
 def extract_text_from_xlsx_file( response, type_file, source_file ) -> None:
     FileXlsxProcessor( response=response, type_file=type_file, source_file=source_file )
