@@ -22,7 +22,7 @@ class SourceFile(models.Model):
     source_file = models.FileField(
         verbose_name="Arquivo de origem",
         upload_to='core/file_uploaded/',
-        validators=[FileExtensionValidator(['pdf', 'xlsx'])]
+        validators=[FileExtensionValidator(['xlsx',])]
         )
     uf = models.CharField(
         verbose_name="UF",
