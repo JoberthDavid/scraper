@@ -209,6 +209,7 @@ class GenericItem(models.Model):
     source_files = models.ManyToManyField(
         SourceFile,
         verbose_name='Origens',
+        related_name='items',
         default=None,
         blank=True,
         )
@@ -250,6 +251,7 @@ class GenericDescription(models.Model):
     source_files = models.ManyToManyField(
         SourceFile,
         verbose_name='Origens',
+        related_name='descriptions',
         default=None,
         blank=True,
         )
