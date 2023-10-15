@@ -19,12 +19,11 @@ from django.urls import path
 
 from django.conf.urls import include
 from rest_framework import routers
-from core.api.viewsets import SourceFileViewSet, GenericItemViewSet
+from core.api.viewsets import GenericItemViewSet
 
 
 router = routers.DefaultRouter()
-router.register(r'publicacoes', SourceFileViewSet, basename='SourceFile')
-router.register(r'servicos', GenericItemViewSet, basename='GenericItem')
+router.register(r'composicoes', GenericItemViewSet, basename='GenericItem')
 
 
 urlpatterns = [
