@@ -183,7 +183,17 @@ class Unit(models.Model):
         max_length=10,
         default=None,
         )
-    
+
+    class Meta:
+        verbose_name="Unidade"
+        verbose_name_plural="Unidades"
+        constraints = [
+            models.UniqueConstraint(
+               fields=['unit',],
+               name="unique_unit"
+            )
+        ]
+
     def __str__(self):
         return str(self.unit)
 
