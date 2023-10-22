@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 
 from scraper.settings import default_dburl, DATABASES, dburl
 
-from core.models import SourceFile, Composition, InputItem, GenericItem, GenericDescription, Unit
+from core.models import SourceFile, Composition, InputItem, GenericItem, GenericDescription, Unit, UnitaryPrice
 from core.usefuls.choices import ANALITICO, SINTETICO, EQUIPAMENTO, MAODEOBRA, MATERIAL, AUXILIAR, TEMPO_FIXO, TRANSPORTE
 from core.usefuls.pattern import *
 from core.usefuls.regex_pattern import CompositionRegex
@@ -22,7 +22,8 @@ class FileXlsxProcessor:
 
         elif type_file == SINTETICO:
             data_frame = pd.read_excel(response["Body"].read(), names=['code', 'description', 'unit', 'price'], converters={'code':str, 'description':str, 'unit':str, 'price':float}, skiprows=source_file.number_of_lines_to_skip)
-            
+
+###### inicialização das listas que serão necessárias         
             generic_group_bulk_create_list = []
             description_bulk_create_list = []
             in_bulk_list = []
@@ -32,6 +33,10 @@ class FileXlsxProcessor:
             
             generic_item_manytomany = []
             generic_description_manytomany = []
+
+            unit_cost_price_bulk_create_list = []
+
+###### criação das instâncias Unit e GenericItem
 
             for index, row in data_frame.iterrows():
 
@@ -49,7 +54,7 @@ class FileXlsxProcessor:
 
             result_generic_item_created = GenericItem.objects.bulk_create( generic_group_bulk_create_list, ignore_conflicts=True )
 
-
+###### criação das instâncias GenericDescription
 
             for index, row in data_frame.iterrows():
 
@@ -66,15 +71,19 @@ class FileXlsxProcessor:
 
             result_generic_description_created = GenericDescription.objects.bulk_create( description_bulk_create_list, ignore_conflicts=True )
 
+###### criação da lista de instâncias GenericDescription
 
             for index, row in data_frame.iterrows():
 
                 generic_description = GenericDescription.objects.get(description=row["description"])
                 list_object_generic_description.append( generic_description.pk )
                 
-            
+###### criação da lista de instâncias GenericItem
+
             items = GenericItem.objects.in_bulk( list_object_generic_item )
             descriptions = GenericDescription.objects.in_bulk( list_object_generic_description )
+
+###### criação das instâncias de relacionamento manytomany entre GenericDescription e SourceFile
 
             for description in descriptions:
 
@@ -86,6 +95,8 @@ class FileXlsxProcessor:
 
             result_manytomany_description_created = GenericDescription.source_files.through.objects.bulk_create( generic_description_manytomany, ignore_conflicts=True )
 
+###### criação das instâncias de relacionamento manytomany entre GenericItem e SourceFile
+
             for item in items:
 
                 generic_item_manytomany.append(GenericItem.source_files.through(
@@ -95,6 +106,21 @@ class FileXlsxProcessor:
                 )
 
             result_manytomany_item_created = GenericItem.source_files.through.objects.bulk_create( generic_item_manytomany, ignore_conflicts=True )
+
+###### criação das instâncias UnitaryCostPrice
+
+            for index, row in data_frame.iterrows():
+
+                generic_item = GenericItem.objects.get(code=row["code"])
+
+                unit_cost_price_bulk_create_list.append( UnitaryPrice(
+                    generic_item = generic_item,
+                    source_file = source_file,
+                    unitary_price = row["price"],
+                    )
+                )
+
+            result_unit_cost_price_created = UnitaryPrice.objects.bulk_create( unit_cost_price_bulk_create_list, ignore_conflicts=True )
 
 
 
