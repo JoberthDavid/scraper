@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db.models import QuerySet
 from django.http import HttpRequest
-from core.models import SourceFile, Composition, InputItem, GenericItem, GenericDescription, UnitCostPrice, ProductiveCostPrice, UnproductiveCostPrice
+from core.models import SourceFile, Composition, InputItem, GenericItem, GenericDescription, UnitaryPrice, UnitaryCost, ProductiveCost, UnproductiveCost
 
 from django.contrib import messages
 from django.utils.translation import ngettext
@@ -87,33 +87,42 @@ class GenericDescriptionAdmin(admin.ModelAdmin):
     list_filter = [ 'source_files',]
 
 
-class UnitCostPriceAdmin(admin.ModelAdmin):
+class UnitaryPriceAdmin(admin.ModelAdmin):
 
     order_by = 'generic_item'
-    list_display = [ 'generic_item', 'cost_price' ]
+    list_display = [ 'generic_item', 'unitary_price' ]
     search_fields = [ 'generic_item__code',]
     list_filter = [ 'source_file',]
 
 
-class ProductiveCostPriceAdmin(admin.ModelAdmin):
+class UnitaryCostAdmin(admin.ModelAdmin):
 
     order_by = 'generic_item'
-    list_display = [ 'generic_item', 'cost_price' ]
+    list_display = [ 'generic_item', 'unitary_cost' ]
     search_fields = [ 'generic_item__code',]
     list_filter = [ 'source_file',]
 
 
-class UnproductiveCostPriceAdmin(admin.ModelAdmin):
+class ProductiveCostAdmin(admin.ModelAdmin):
 
     order_by = 'generic_item'
-    list_display = [ 'generic_item', 'cost_price' ]
+    list_display = [ 'generic_item', 'productive_cost' ]
     search_fields = [ 'generic_item__code',]
     list_filter = [ 'source_file',]
 
 
-admin.site.register(UnitCostPrice, UnitCostPriceAdmin)
-admin.site.register(ProductiveCostPrice, ProductiveCostPriceAdmin)
-admin.site.register(UnproductiveCostPrice, UnproductiveCostPriceAdmin)
+class UnproductiveCostAdmin(admin.ModelAdmin):
+
+    order_by = 'generic_item'
+    list_display = [ 'generic_item', 'unproductive_cost' ]
+    search_fields = [ 'generic_item__code',]
+    list_filter = [ 'source_file',]
+
+
+admin.site.register(UnitaryPrice, UnitaryPriceAdmin)
+admin.site.register(UnitaryCost, UnitaryCostAdmin)
+admin.site.register(ProductiveCost, ProductiveCostAdmin)
+admin.site.register(UnproductiveCost, UnproductiveCostAdmin)
 admin.site.register(GenericDescription, GenericDescriptionAdmin)
 admin.site.register(GenericItem, GenericItemAdmin)
 admin.site.register(SourceFile, SourceFileAdmin)
