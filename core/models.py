@@ -1,11 +1,10 @@
 from decimal import Decimal
-import datetime
+
 from django.db import models
 from django.core.validators import FileExtensionValidator
 
 from core.usefuls.choices import *
 
-import hashlib
 
 class SourceFile(models.Model):
 
@@ -188,12 +187,12 @@ class Unit(models.Model):
     def __str__(self):
         return str(self.unit)
 
+
 class GenericItem(models.Model):
     
     code = models.CharField(
         verbose_name="Código",
         max_length=20,
-        primary_key=True,
         unique=True,
         blank=False,
         editable=False,
@@ -208,7 +207,7 @@ class GenericItem(models.Model):
         )
     source_files = models.ManyToManyField(
         SourceFile,
-        verbose_name='Origens',
+        verbose_name='Arquivos de origem',
         related_name='items',
         default=None,
         blank=True,
@@ -250,7 +249,7 @@ class GenericDescription(models.Model):
         )
     source_files = models.ManyToManyField(
         SourceFile,
-        verbose_name='Origens',
+        verbose_name='Arquivos de origem',
         related_name='descriptions',
         default=None,
         blank=True,
@@ -268,3 +267,75 @@ class GenericDescription(models.Model):
 
     def __str__(self):
         return str(self.generic_item) + " - " + str(self.description)
+
+
+class GenericCostPrice(models.Model):
+
+    generic_item = models.ForeignKey(
+        GenericItem,
+        verbose_name="Código",
+        on_delete=models.CASCADE,
+        default=None,
+        null=True,
+        blank=True,
+        )
+    source_file = models.ForeignKey(
+        SourceFile,
+        verbose_name="Arquivo de origem",
+        on_delete=models.CASCADE,
+        default=None,
+        null=True,
+        blank=True,
+    )
+    
+    class Meta:
+        verbose_name="Preço de custo"
+        verbose_name_plural="Preços de custo"
+        constraints = [
+            models.UniqueConstraint(
+               fields=['generic_item', 'source_file'],
+               name="unique_generic_cost_price"
+            )
+        ]
+
+
+class UnitCostPrice(GenericCostPrice):
+
+    cost_price = models.DecimalField(
+        verbose_name="Preço de custo unitário",
+        max_digits=12,
+        decimal_places=4,
+        default=Decimal(0.0),
+        )
+
+    class Meta:
+        verbose_name="Preço de custo unitário"
+        verbose_name_plural="Preços de custo unitário"
+
+
+class ProductiveCostPrice(GenericCostPrice):
+
+    cost_price = models.DecimalField(
+        verbose_name="Preço de custo produtivo",
+        max_digits=12,
+        decimal_places=4,
+        default=Decimal(0.0),
+        )
+
+    class Meta:
+        verbose_name="Preço de custo produtivo"
+        verbose_name_plural="Preços de custo produtivo"
+
+
+class UnproductiveCostPrice(GenericCostPrice):
+
+    cost_price = models.DecimalField(
+        verbose_name="Preço de custo improdutivo",
+        max_digits=12,
+        decimal_places=4,
+        default=Decimal(0.0),
+        )
+
+    class Meta:
+        verbose_name="Preço de custo improdutivo"
+        verbose_name_plural="Preços de custo improdutivo"

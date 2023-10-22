@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db.models import QuerySet
 from django.http import HttpRequest
-from core.models import SourceFile, Composition, InputItem, GenericItem, GenericDescription
+from core.models import SourceFile, Composition, InputItem, GenericItem, GenericDescription, UnitCostPrice, ProductiveCostPrice, UnproductiveCostPrice
 
 from django.contrib import messages
 from django.utils.translation import ngettext
@@ -87,6 +87,33 @@ class GenericDescriptionAdmin(admin.ModelAdmin):
     list_filter = [ 'source_files',]
 
 
+class UnitCostPriceAdmin(admin.ModelAdmin):
+
+    order_by = 'generic_item'
+    list_display = [ 'generic_item', 'cost_price' ]
+    search_fields = [ 'generic_item__code',]
+    list_filter = [ 'source_file',]
+
+
+class ProductiveCostPriceAdmin(admin.ModelAdmin):
+
+    order_by = 'generic_item'
+    list_display = [ 'generic_item', 'cost_price' ]
+    search_fields = [ 'generic_item__code',]
+    list_filter = [ 'source_file',]
+
+
+class UnproductiveCostPriceAdmin(admin.ModelAdmin):
+
+    order_by = 'generic_item'
+    list_display = [ 'generic_item', 'cost_price' ]
+    search_fields = [ 'generic_item__code',]
+    list_filter = [ 'source_file',]
+
+
+admin.site.register(UnitCostPrice, UnitCostPriceAdmin)
+admin.site.register(ProductiveCostPrice, ProductiveCostPriceAdmin)
+admin.site.register(UnproductiveCostPrice, UnproductiveCostPriceAdmin)
 admin.site.register(GenericDescription, GenericDescriptionAdmin)
 admin.site.register(GenericItem, GenericItemAdmin)
 admin.site.register(SourceFile, SourceFileAdmin)
