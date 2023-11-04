@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db.models import QuerySet
 from django.http import HttpRequest
-from core.models import SourceFile, Composition, InputItem, GenericItem, GenericDescription, UnitaryPrice, UnitaryCost, ProductiveCost, UnproductiveCost
+from core.models import SourceFile, Composition, InputItem, GenericItem, GenericDescription, MonetaryValue
 
 from django.contrib import messages
 from django.utils.translation import ngettext
@@ -76,7 +76,7 @@ class GenericItemAdmin(admin.ModelAdmin):
     order_by = 'code'
     list_display = [ 'code', 'unit']
     search_fields = ['code',]
-    list_filter = [ 'source_files', 'unit', 'group',]
+    list_filter = [ 'group', 'unit', 'source_files', ]
 
 
 class GenericDescriptionAdmin(admin.ModelAdmin):
@@ -87,42 +87,15 @@ class GenericDescriptionAdmin(admin.ModelAdmin):
     list_filter = [ 'source_files',]
 
 
-class UnitaryPriceAdmin(admin.ModelAdmin):
+class MonetaryValueAdmin(admin.ModelAdmin):
 
     order_by = 'generic_item'
-    list_display = [ 'generic_item', 'unitary_price' ]
+    list_display = [ 'generic_item', 'monetary_value']
     search_fields = [ 'generic_item__code',]
-    list_filter = [ 'source_file',]
+    list_filter = [ 'classification', 'source_file',]
 
 
-class UnitaryCostAdmin(admin.ModelAdmin):
-
-    order_by = 'generic_item'
-    list_display = [ 'generic_item', 'unitary_cost' ]
-    search_fields = [ 'generic_item__code',]
-    list_filter = [ 'source_file',]
-
-
-class ProductiveCostAdmin(admin.ModelAdmin):
-
-    order_by = 'generic_item'
-    list_display = [ 'generic_item', 'productive_cost' ]
-    search_fields = [ 'generic_item__code',]
-    list_filter = [ 'source_file',]
-
-
-class UnproductiveCostAdmin(admin.ModelAdmin):
-
-    order_by = 'generic_item'
-    list_display = [ 'generic_item', 'unproductive_cost' ]
-    search_fields = [ 'generic_item__code',]
-    list_filter = [ 'source_file',]
-
-
-admin.site.register(UnitaryPrice, UnitaryPriceAdmin)
-admin.site.register(UnitaryCost, UnitaryCostAdmin)
-admin.site.register(ProductiveCost, ProductiveCostAdmin)
-admin.site.register(UnproductiveCost, UnproductiveCostAdmin)
+admin.site.register(MonetaryValue, MonetaryValueAdmin)
 admin.site.register(GenericDescription, GenericDescriptionAdmin)
 admin.site.register(GenericItem, GenericItemAdmin)
 admin.site.register(SourceFile, SourceFileAdmin)

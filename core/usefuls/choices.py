@@ -11,7 +11,10 @@ TRANSPORTE = 'TR'
 ONERADO = 'ON'
 DESONERADO = 'DS'
 NAO_APLICAVEL = 'NA'
-
+CUSTO ='CT'
+PRECO = 'PC'
+PRODUTIVO = 'PR'
+IMPRODUTIVO = 'IM'
 
 ACRE = 'AC'
 ALAGOAS = 'AL'
@@ -105,7 +108,12 @@ INPUT_GROUP=[
 (TEMPO_FIXO, 'TEMPO FIXO'),
 (TRANSPORTE, 'TRANSPORTE'),
 ]
-
+MONETARY=[
+(CUSTO,'CUSTO'),
+(PRECO,'PREÇO'),
+(PRODUTIVO,'PRODUTIVO'),
+(IMPRODUTIVO,'IMPRODUTIVO'),
+]
 COMPOSITION_GROUP=[
 ('03', 'APARELHO DE APOIO'),
 ('04', 'ARMAÇÃO'),
@@ -152,3 +160,21 @@ COMPOSITION_GROUP=[
 ('68', 'BUEIROS PRÉ-MOLDADOS'),
 ('71', 'IP4'),
 ]
+
+df_code='code'
+df_description='description'
+df_unit='unit'
+df_monetary_value='monetary_value'
+df_purchase_value='purchase_value'
+df_deprecation='deprecation'
+df_equity_opportunity='equity_opportunity'
+df_insurance_and_taxes='insurance_and_taxes'
+df_maintenance='maintenance'
+df_operation='operation'
+df_labor='labor'
+df_productive_cost='productive_cost'
+df_unproductive_cost='unproductive_cost'
+df_wage='wage'
+df_charges='charges'
+df_unhealthy='unhealthy'
+df_body="Body"

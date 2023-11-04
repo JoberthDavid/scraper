@@ -279,7 +279,7 @@ class GenericDescription(models.Model):
         return str(self.generic_item) + " - " + str(self.description)
 
 
-class UnitaryPrice(models.Model):
+class MonetaryValue(models.Model):
 
     generic_item = models.ForeignKey(
         GenericItem,
@@ -297,127 +297,25 @@ class UnitaryPrice(models.Model):
         null=True,
         blank=True,
     )
-    unitary_price = models.DecimalField(
-        verbose_name="Preço unitário",
+    monetary_value = models.DecimalField(
+        verbose_name="Valor monetário",
         max_digits=12,
         decimal_places=4,
         default=Decimal(0.0),
         )
-
-    class Meta:
-        verbose_name="Preço unitário"
-        verbose_name_plural="Preços unitários"
-        constraints = [
-            models.UniqueConstraint(
-               fields=['generic_item', 'source_file'],
-               name="unique_unitary_price"
-            )
-        ]
-
-
-class UnitaryCost(models.Model):
-
-    generic_item = models.ForeignKey(
-        GenericItem,
-        verbose_name="Código",
-        on_delete=models.CASCADE,
-        default=None,
-        null=True,
-        blank=True,
-        )
-    source_file = models.ForeignKey(
-        SourceFile,
-        verbose_name="Arquivo de origem",
-        on_delete=models.CASCADE,
-        default=None,
-        null=True,
-        blank=True,
-    )
-    unitary_cost = models.DecimalField(
-        verbose_name="Custo unitário",
-        max_digits=12,
-        decimal_places=4,
-        default=Decimal(0.0),
+    classification = models.CharField(
+        verbose_name="Classificação",
+        max_length=2,
+        choices=MONETARY,
+        default=CUSTO,
         )
 
     class Meta:
-        verbose_name="Custo unitário"
-        verbose_name_plural="Custos unitários"
+        verbose_name="Valor monetário"
+        verbose_name_plural="Valores monetários"
         constraints = [
             models.UniqueConstraint(
-               fields=['generic_item', 'source_file'],
-               name="unique_unitary_cost"
-            )
-        ]
-
-
-class ProductiveCost(models.Model):
-
-    generic_item = models.ForeignKey(
-        GenericItem,
-        verbose_name="Código",
-        on_delete=models.CASCADE,
-        default=None,
-        null=True,
-        blank=True,
-        )
-    source_file = models.ForeignKey(
-        SourceFile,
-        verbose_name="Arquivo de origem",
-        on_delete=models.CASCADE,
-        default=None,
-        null=True,
-        blank=True,
-    )
-    productive_cost = models.DecimalField(
-        verbose_name="Custo produtivo",
-        max_digits=12,
-        decimal_places=4,
-        default=Decimal(0.0),
-        )
-
-    class Meta:
-        verbose_name="Custo produtivo"
-        verbose_name_plural="Custo produtivo"
-        constraints = [
-            models.UniqueConstraint(
-               fields=['generic_item', 'source_file'],
-               name="unique_productive_cost"
-            )
-        ]
-
-
-class UnproductiveCost(models.Model):
-
-    generic_item = models.ForeignKey(
-        GenericItem,
-        verbose_name="Código",
-        on_delete=models.CASCADE,
-        default=None,
-        null=True,
-        blank=True,
-        )
-    source_file = models.ForeignKey(
-        SourceFile,
-        verbose_name="Arquivo de origem",
-        on_delete=models.CASCADE,
-        default=None,
-        null=True,
-        blank=True,
-    )
-    unproductive_cost = models.DecimalField(
-        verbose_name="Custo improdutivo",
-        max_digits=12,
-        decimal_places=4,
-        default=Decimal(0.0),
-        )
-
-    class Meta:
-        verbose_name="Custo improdutivo"
-        verbose_name_plural="Custo improdutivo"
-        constraints = [
-            models.UniqueConstraint(
-               fields=['generic_item', 'source_file'],
-               name="unique_unproductive_cost"
+               fields=['generic_item', 'source_file', 'classification'],
+               name="unique_monetary_value"
             )
         ]
