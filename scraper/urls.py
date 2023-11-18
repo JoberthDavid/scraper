@@ -19,14 +19,18 @@ from django.urls import path
 
 from django.conf.urls import include
 from rest_framework import routers
-from core.api.viewsets import GenericItemViewSet
+from core.api.viewsets import SourceFileViewSet, GenericItemViewSet, GenericDescriptionViewSet, CompositionViewSet
 
 
 router = routers.DefaultRouter()
-router.register(r'composicoes', GenericItemViewSet, basename='GenericItem')
+router.register(r'arquivos-base', SourceFileViewSet, basename='SourceFile')
+router.register(r'codigos', GenericItemViewSet, basename='GenericItem')
+router.register(r'descricoes', GenericDescriptionViewSet, basename='GenericDescription')
+router.register(r'composicoes', CompositionViewSet, basename='Composition')
+
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include(router.urls))
+    path('', include(router.urls)),
 ]
