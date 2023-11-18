@@ -178,3 +178,7 @@ df_wage='wage'
 df_charges='charges'
 df_unhealthy='unhealthy'
 df_body="Body"
+df_quantity='quantity'
+df_productive_use='productive_use'
+df_unproductive_use='unproductive_use'
+df_production='production'

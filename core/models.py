@@ -75,107 +75,6 @@ class SourceFile(models.Model):
         return '/scraper/%i/' % self.pk
     
 
-class Composition(models.Model):
-
-    composition_code = models.CharField(
-        verbose_name="Código",
-        max_length=10,
-        )
-    fic = models.DecimalField(
-        verbose_name="FIC",
-        max_digits=18,
-        decimal_places=5,
-        default=Decimal(0.0),
-        )
-    production = models.DecimalField(
-        verbose_name="Produção",
-        max_digits=18,
-        decimal_places=5
-        )
-    source_file = models.ForeignKey(
-        SourceFile,
-        verbose_name='Arquivo de origem',
-        on_delete=models.CASCADE,
-        default=None,
-        null=True,
-        blank=True,
-        )
-    main_composition_group = models.CharField(
-        verbose_name="Grupo",
-        max_length=2,
-        choices=COMPOSITION_GROUP,
-        )
-
-
-    class Meta:
-        verbose_name="Composição"
-        verbose_name_plural="Composições"
-        constraints = [
-            models.UniqueConstraint(
-               fields=['composition_code', 'fic', 'production', 'source_file'],
-               name="unique_composition"
-            )
-        ]
-
-    def __str__(self):
-        return str(self.composition_code)
-
-
-class InputItem(models.Model):
-
-    main_input_code = models.CharField(
-        verbose_name="Código",
-        max_length=10,
-        )
-    main_input_group = models.CharField(
-        verbose_name="Grupo",
-        max_length=2,
-        choices=INPUT_GROUP,
-        )
-    main_input_quantity = models.DecimalField(
-        verbose_name="Quantidade",
-        max_digits=18,
-        decimal_places=5,
-        )
-    main_input_use = models.DecimalField(
-        verbose_name="Utilização",
-        max_digits=18,
-        decimal_places=5,
-        default=None,
-        null=True,
-        blank=True,
-        )
-    transported_input_code = models.CharField(
-        verbose_name="Código insumo transportado",
-        max_length=10,
-        default=None,
-        null=True,
-        blank=True,
-
-        )
-    related_composition = models.ForeignKey(
-        Composition,
-        verbose_name='Composição proprietária',
-        on_delete=models.CASCADE,
-        default=None,
-        null=True,
-        blank=True,
-        )
-
-    class Meta:
-        verbose_name="Apropriação"
-        verbose_name_plural="Apropriações"
-        constraints = [
-            models.UniqueConstraint(
-               fields=['main_input_code', 'main_input_quantity', 'main_input_use', 'transported_input_code', 'related_composition'],
-               name="unique_input"
-            )
-        ]
-
-    def __str__(self):
-        return str(self.related_composition) + " - " + str(self.main_input_code)
-
-
 class Unit(models.Model):
 
     unit = models.CharField(
@@ -207,14 +106,6 @@ class GenericItem(models.Model):
         blank=False,
         editable=False,
         )
-    unit = models.ForeignKey(
-        Unit,
-        verbose_name='Unidade',
-        on_delete=models.CASCADE,
-        default=None,
-        null=True,
-        blank=True,
-        )
     source_files = models.ManyToManyField(
         SourceFile,
         verbose_name='Arquivos de origem',
@@ -234,7 +125,7 @@ class GenericItem(models.Model):
         verbose_name_plural="Itens genéricos"
         constraints = [
             models.UniqueConstraint(
-               fields=['code', 'unit'],
+               fields=['code',],
                name="unique_generic_item"
             )
         ]
@@ -249,6 +140,7 @@ class GenericDescription(models.Model):
         GenericItem,
         verbose_name="Código",
         on_delete=models.CASCADE,
+        related_name='descriptions',
         default=None,
         null=True,
         blank=True,
@@ -264,6 +156,12 @@ class GenericDescription(models.Model):
         default=None,
         blank=True,
         )
+    group = models.CharField(
+        verbose_name="Grupo",
+        max_length=2,
+        choices=GENERIC_GROUP,
+        default=None,
+        )
 
     class Meta:
         verbose_name="Descrição genérica"
@@ -276,15 +174,16 @@ class GenericDescription(models.Model):
         ]
 
     def __str__(self):
-        return str(self.generic_item) + " - " + str(self.description)
+        return str(self.description)
 
-
+ 
 class MonetaryValue(models.Model):
 
     generic_item = models.ForeignKey(
         GenericItem,
         verbose_name="Código",
         on_delete=models.CASCADE,
+        related_name='values',
         default=None,
         null=True,
         blank=True,
@@ -293,6 +192,7 @@ class MonetaryValue(models.Model):
         SourceFile,
         verbose_name="Arquivo de origem",
         on_delete=models.CASCADE,
+        related_name='values',
         default=None,
         null=True,
         blank=True,
@@ -303,11 +203,26 @@ class MonetaryValue(models.Model):
         decimal_places=4,
         default=Decimal(0.0),
         )
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name='Unidade',
+        on_delete=models.CASCADE,
+        related_name='values',
+        default=None,
+        null=True,
+        blank=True,
+        )
     classification = models.CharField(
         verbose_name="Classificação",
         max_length=2,
         choices=MONETARY,
         default=CUSTO,
+        )
+    group = models.CharField(
+        verbose_name="Grupo",
+        max_length=2,
+        choices=GENERIC_GROUP,
+        default=None,
         )
 
     class Meta:
@@ -319,3 +234,160 @@ class MonetaryValue(models.Model):
                name="unique_monetary_value"
             )
         ]
+
+
+class Composition(models.Model):
+
+    generic_item = models.ForeignKey(
+        GenericItem,
+        verbose_name="Código",
+        on_delete=models.CASCADE,
+        related_name='compositions',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    generic_description = models.ForeignKey(
+        GenericDescription,
+        verbose_name="Descrição",
+        on_delete=models.CASCADE,
+        related_name='compositions',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name='Unidade',
+        on_delete=models.CASCADE,
+        related_name='compositions',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    fic = models.DecimalField(
+        verbose_name="FIC",
+        max_digits=18,
+        decimal_places=5,
+        default=Decimal(0.0),
+        )
+    production = models.DecimalField(
+        verbose_name="Produção",
+        max_digits=18,
+        decimal_places=5
+        )
+    source_file = models.ForeignKey(
+        SourceFile,
+        verbose_name='Arquivo de origem',
+        on_delete=models.CASCADE,
+        related_name='compositions',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    composition_group = models.CharField(
+        verbose_name="Grupo",
+        max_length=2,
+        choices=COMPOSITION_GROUP,
+        )
+
+
+    class Meta:
+        verbose_name="Composição"
+        verbose_name_plural="Composições"
+        constraints = [
+            models.UniqueConstraint(
+               fields=['generic_item', 'generic_description', 'unit', 'fic', 'production', 'source_file'],
+               name="unique_composition"
+            )
+        ]
+
+    def __str__(self):
+        return str(self.generic_item) + ' - ' + str(self.generic_description)
+
+
+class InputItem(models.Model):
+
+    composition = models.ForeignKey(
+        Composition,
+        verbose_name="Composição",
+        on_delete=models.CASCADE,
+        related_name='inputs',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    generic_item = models.ForeignKey(
+        GenericItem,
+        verbose_name="Código",
+        on_delete=models.CASCADE,
+        related_name='inputs',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    generic_description = models.ForeignKey(
+        GenericDescription,
+        verbose_name="Descrição",
+        on_delete=models.CASCADE,
+        related_name='inputs',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name='Unidade',
+        on_delete=models.CASCADE,
+        related_name='inputs',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    input_group = models.CharField(
+        verbose_name="Grupo",
+        max_length=2,
+        choices=INPUT_GROUP,
+        )
+    input_quantity = models.DecimalField(
+        verbose_name="Quantidade",
+        max_digits=18,
+        decimal_places=5,
+        )
+    input_use = models.DecimalField(
+        verbose_name="Utilização",
+        max_digits=18,
+        decimal_places=5,
+        default=1.0,
+        null=True,
+        blank=True,
+        )
+    # transported_input_code = models.CharField(
+    #     verbose_name="Código insumo transportado",
+    #     max_length=10,
+    #     default=None,
+    #     null=True,
+    #     blank=True,
+
+    #     )
+    # related_composition = models.ForeignKey(
+    #     Composition,
+    #     verbose_name='Composição proprietária',
+    #     on_delete=models.CASCADE,
+    #     default=None,
+    #     null=True,
+    #     blank=True,
+    #     )
+
+    class Meta:
+        verbose_name="Apropriação"
+        verbose_name_plural="Apropriações"
+        constraints = [
+            models.UniqueConstraint(
+               fields=['composition', 'generic_item', 'generic_description', 'unit', 'input_group', 'input_quantity', 'input_use'],
+               name="unique_input"
+            )
+        ]
+
+    def __str__(self):
+        return str(self.composition)

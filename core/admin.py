@@ -59,24 +59,22 @@ class SourceFileAdmin(admin.ModelAdmin):
 
 class CompositionAdmin(admin.ModelAdmin):
 
-    order_by = 'source_file'
-    list_filter = ['source_file','main_composition_group',]
-    search_fields = ['composition_code']
+    order_by = ['composition_group','source_file',]
+    list_filter = ['composition_group','source_file__data_base',]
+    search_fields = ['generic_item']
 
 
 class InputItemAdmin(admin.ModelAdmin):
 
-    order_by = 'related_composition'
-    list_filter = ['related_composition__source_file','main_input_group','related_composition__main_composition_group',]
-    search_fields = ['related_composition__composition_code',]
+    search_fields = ['composition__source_file','generic_description__description',]
 
 
 class GenericItemAdmin(admin.ModelAdmin):
 
     order_by = 'code'
-    list_display = [ 'code', 'unit']
+    list_display = [ 'code',]
     search_fields = ['code',]
-    list_filter = [ 'group', 'unit', 'source_files', ]
+    list_filter = [ 'group', 'source_files', ]
 
 
 class GenericDescriptionAdmin(admin.ModelAdmin):
@@ -90,7 +88,7 @@ class GenericDescriptionAdmin(admin.ModelAdmin):
 class MonetaryValueAdmin(admin.ModelAdmin):
 
     order_by = 'generic_item'
-    list_display = [ 'generic_item', 'monetary_value']
+    list_display = [ 'generic_item', 'monetary_value', 'unit']
     search_fields = [ 'generic_item__code',]
     list_filter = [ 'classification', 'source_file',]
 
