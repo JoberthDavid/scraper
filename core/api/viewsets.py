@@ -4,9 +4,9 @@ from rest_framework import filters
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from rest_framework.viewsets import ModelViewSet
-from core.models import SourceFile, Composition, InputItem, Unit, GenericItem, GenericDescription
-from core.api.serializers import SourceFileSerializer, UnitSerializer, GenericItemSerializer, GenericDescriptionSerializer, CompositionSerializer
-from core.api.filters import GenericItemFilter, GenericDescriptionFilter, CompositionFilter
+from core.models import  SourceFile, GenericItem, GenericDescription, Unit, MonetaryValue, Composition, InputItem
+from core.api.serializers import SourceFileSerializer, GenericItemSerializer, GenericDescriptionSerializer, UnitSerializer, MonetaryValueSerializer, CompositionSerializer
+from core.api.filters import SourceFileFilter, GenericItemFilter, GenericDescriptionFilter, MonetaryValueFilter, CompositionFilter
 
 
 class ReadOnly(BasePermission):
@@ -26,10 +26,28 @@ class SourceFileViewSet(ModelViewSet):
         ]
     ordering_fields = ['data_base', 'type_system']
     ordering = ['data_base', 'type_system']
+    filterset_class = SourceFileFilter
 
     def get_queryset(self):           
         return SourceFile.objects.filter(status=True)
     
+
+class GenericDescriptionViewSet(ModelViewSet):
+
+    serializer_class = GenericDescriptionSerializer
+    permission_classes = [ReadOnly]
+    http_method_names = ['get', ]
+    filter_backends = [
+            filters.OrderingFilter,
+            DjangoFilterBackend,
+        ]
+    ordering_fields = ['description']
+    ordering = ['description']
+    filterset_class = GenericDescriptionFilter
+
+    def get_queryset(self):           
+        return GenericDescription.objects.all()
+
 
 class GenericItemViewSet(ModelViewSet):
 
@@ -48,21 +66,37 @@ class GenericItemViewSet(ModelViewSet):
         return GenericItem.objects.all()
 
 
-class GenericDescriptionViewSet(ModelViewSet):
+class UnitViewSet(ModelViewSet):
 
-    serializer_class = GenericDescriptionSerializer
+    serializer_class = UnitSerializer
     permission_classes = [ReadOnly]
     http_method_names = ['get', ]
     filter_backends = [
             filters.OrderingFilter,
             DjangoFilterBackend,
         ]
-    ordering_fields = ['description']
-    ordering = ['description']
-    filterset_class = GenericDescriptionFilter
+    ordering_fields = ['unit']
+    ordering = ['unit']
 
     def get_queryset(self):           
-        return GenericDescription.objects.all()
+        return Unit.objects.all()
+
+
+class MonetaryValueViewSet(ModelViewSet):
+
+    serializer_class = MonetaryValueSerializer
+    permission_classes = [ReadOnly]
+    http_method_names = ['get', ]
+    filter_backends = [
+            filters.OrderingFilter,
+            DjangoFilterBackend,
+        ]
+    ordering_fields = ['generic_item', 'unit']
+    ordering = ['generic_item', 'unit']
+    filterset_class = MonetaryValueFilter
+    
+    def get_queryset(self):           
+        return MonetaryValue.objects.all()
 
 
 class CompositionViewSet(ModelViewSet):
