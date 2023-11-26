@@ -16,7 +16,7 @@ class GenericDescriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GenericDescription
-        fields = ['source_files', 'generic_item', 'group', 'id', 'description']       
+        fields = ['id', 'source_files', 'generic_item', 'group', 'description']       
 
 
 class GenericItemSerializer(serializers.ModelSerializer):
@@ -25,7 +25,7 @@ class GenericItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GenericItem
-        fields = ['source_files', 'group', 'id', 'code']
+        fields = ['id', 'code', 'source_files', 'group']
 
 
 class UnitSerializer(serializers.ModelSerializer):
@@ -42,8 +42,17 @@ class MonetaryValueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MonetaryValue
-        fields = ['generic_item', 'monetary_value', 'unit', 'classification', 'group']
+        fields = ['id', 'generic_item', 'monetary_value', 'unit', 'classification', 'group']
 
+class InputItemSerializer(serializers.ModelSerializer):
+
+    composition = serializers.PrimaryKeyRelatedField(read_only=True)
+    generic_item = serializers.SlugRelatedField(read_only=True, slug_field='code')
+    generic_description = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = InputItem
+        fields = ['id', 'composition', 'generic_item', 'generic_description', 'input_group', 'input_quantity', 'input_use']
 
 class CompositionSerializer(serializers.ModelSerializer):
 
@@ -51,8 +60,9 @@ class CompositionSerializer(serializers.ModelSerializer):
     generic_description = serializers.StringRelatedField(read_only=True)
     unit = serializers.SlugRelatedField(read_only=True, slug_field='unit')
     source_file = serializers.SlugRelatedField(read_only=True, slug_field='data_base')
-    
+    inputs = InputItemSerializer(many=True, read_only=True)
+
     class Meta:
         model = Composition
-        fields = ['composition_group', 'generic_item', 'generic_description', 'unit', 'fic', 'production','source_file']
+        fields = ['id', 'composition_group', 'generic_item', 'generic_description', 'unit', 'fic', 'production','source_file', 'inputs']
  

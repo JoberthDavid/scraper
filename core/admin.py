@@ -61,7 +61,7 @@ class CompositionAdmin(admin.ModelAdmin):
 
     order_by = ['composition_group','source_file',]
     list_filter = ['composition_group','source_file__data_base',]
-    search_fields = ['generic_item']
+    search_fields = ['generic_item__code', 'generic_description__description']
 
 
 class InputItemAdmin(admin.ModelAdmin):
@@ -79,9 +79,9 @@ class GenericItemAdmin(admin.ModelAdmin):
 
 class GenericDescriptionAdmin(admin.ModelAdmin):
 
-    order_by = 'generic_item'
-    list_display = [ 'generic_item', 'description' ]
-    search_fields = [ 'description',]
+    order_by = 'generic_items'
+    list_display = [ 'description' ]
+    search_fields = [ 'generic_items__code', 'description',]
     list_filter = [ 'source_files',]
 
 

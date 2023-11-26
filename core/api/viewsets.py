@@ -5,7 +5,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from rest_framework.viewsets import ModelViewSet
 from core.models import  SourceFile, GenericItem, GenericDescription, Unit, MonetaryValue, Composition, InputItem
-from core.api.serializers import SourceFileSerializer, GenericItemSerializer, GenericDescriptionSerializer, UnitSerializer, MonetaryValueSerializer, CompositionSerializer
+from core.api.serializers import SourceFileSerializer, GenericItemSerializer, GenericDescriptionSerializer, UnitSerializer, MonetaryValueSerializer, CompositionSerializer, InputItemSerializer
 from core.api.filters import SourceFileFilter, GenericItemFilter, GenericDescriptionFilter, MonetaryValueFilter, CompositionFilter
 
 

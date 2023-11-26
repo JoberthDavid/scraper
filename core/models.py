@@ -77,6 +77,7 @@ class SourceFile(models.Model):
 
 class Unit(models.Model):
 
+    #acrescentar um campo de dimensão
     unit = models.CharField(
         verbose_name="Unidade",
         max_length=10,
@@ -136,13 +137,11 @@ class GenericItem(models.Model):
 
 class GenericDescription(models.Model):
 
-    generic_item = models.ForeignKey(
+    generic_items = models.ManyToManyField(
         GenericItem,
         verbose_name="Código",
-        on_delete=models.CASCADE,
         related_name='descriptions',
         default=None,
-        null=True,
         blank=True,
         )
     description = models.TextField(
@@ -297,7 +296,7 @@ class Composition(models.Model):
         verbose_name_plural="Composições"
         constraints = [
             models.UniqueConstraint(
-               fields=['generic_item', 'generic_description', 'unit', 'fic', 'production', 'source_file'],
+               fields=['generic_item', 'source_file'],
                name="unique_composition"
             )
         ]
@@ -335,15 +334,6 @@ class InputItem(models.Model):
         null=True,
         blank=True,
         )
-    unit = models.ForeignKey(
-        Unit,
-        verbose_name='Unidade',
-        on_delete=models.CASCADE,
-        related_name='inputs',
-        default=None,
-        null=True,
-        blank=True,
-        )
     input_group = models.CharField(
         verbose_name="Grupo",
         max_length=2,
@@ -362,32 +352,79 @@ class InputItem(models.Model):
         null=True,
         blank=True,
         )
-    # transported_input_code = models.CharField(
-    #     verbose_name="Código insumo transportado",
-    #     max_length=10,
-    #     default=None,
-    #     null=True,
-    #     blank=True,
-
-    #     )
-    # related_composition = models.ForeignKey(
-    #     Composition,
-    #     verbose_name='Composição proprietária',
-    #     on_delete=models.CASCADE,
-    #     default=None,
-    #     null=True,
-    #     blank=True,
-    #     )
 
     class Meta:
-        verbose_name="Apropriação"
-        verbose_name_plural="Apropriações"
+        verbose_name="Insumo"
+        verbose_name_plural="Insumos"
         constraints = [
             models.UniqueConstraint(
-               fields=['composition', 'generic_item', 'generic_description', 'unit', 'input_group', 'input_quantity', 'input_use'],
+               fields=['composition', 'generic_item'],
                name="unique_input"
             )
         ]
-
+    
     def __str__(self):
-        return str(self.composition)
+        return str(self.composition) + ' - ' + str(self.generic_item) + ' - ' + str(self.generic_description)
+
+
+class TransportItem(models.Model):
+
+    composition = models.ForeignKey(
+        Composition,
+        verbose_name="Composição",
+        on_delete=models.CASCADE,
+        related_name='transports',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    related_input = models.ForeignKey(
+        Composition,
+        verbose_name='Insumo proprietário',
+        on_delete=models.CASCADE,
+        default=None,
+        null=True,
+        blank=True,
+        )
+    generic_item = models.ForeignKey(
+        GenericItem,
+        verbose_name="Código",
+        on_delete=models.CASCADE,
+        related_name='transports',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    generic_description = models.ForeignKey(
+        GenericDescription,
+        verbose_name="Descrição",
+        on_delete=models.CASCADE,
+        related_name='transports',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name='Unidade',
+        on_delete=models.CASCADE,
+        related_name='transports',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    transport_group = models.CharField(
+        verbose_name="Grupo",
+        max_length=2,
+        choices=INPUT_GROUP,
+        )
+    
+    class Meta:
+        verbose_name="Transporte"
+        verbose_name_plural="Transportes"
+        constraints = [
+            models.UniqueConstraint(
+               fields=['composition', 'related_input', 'generic_item', 'generic_description', 'unit', 'transport_group'],
+               name="unique_transport"
+            )
+        ]

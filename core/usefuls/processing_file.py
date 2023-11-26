@@ -6,6 +6,7 @@ from scraper.settings import default_dburl, DATABASES, dburl
 
 from core.models import SourceFile, Composition, InputItem, GenericItem, GenericDescription, Unit, MonetaryValue
 from core.usefuls.choices import *
+import re
 
 
 class FileXlsxProcessor:
@@ -48,7 +49,6 @@ class FileXlsxProcessor:
             generic_item = GenericItem.objects.get(code=row[df_code])
             self.generic_item_pk_list.append( generic_item.pk )
             generic_description_bulk_create_list.append( GenericDescription(
-                generic_item = generic_item,
                 description = row[df_description],
                 group = group,
                 )
@@ -98,14 +98,27 @@ class FileXlsxProcessor:
 
     def relate_many_to_many_generic_description_with_source_file(self, descriptions, source_file):
     ###### criação das instâncias de relacionamento manytomany entre GenericDescription e SourceFile
-        generic_description_manytomany = []
+        generic_description_manytomany_with_source_file = []
         for description in descriptions:
-            generic_description_manytomany.append(GenericDescription.source_files.through(
+            generic_description_manytomany_with_source_file.append(GenericDescription.source_files.through(
                 genericdescription_id = description,
                 sourcefile_id = source_file.pk,
                 )
             )
-        GenericDescription.source_files.through.objects.bulk_create( generic_description_manytomany, ignore_conflicts=True )
+        GenericDescription.source_files.through.objects.bulk_create( generic_description_manytomany_with_source_file, ignore_conflicts=True )
+
+    def relate_many_to_many_generic_description_with_generic_item(self, data_frame):
+    ###### criação das instâncias de relacionamento manytomany entre GenericDescription e GenericItem
+        generic_description_manytomany_with_generic_item = []
+        for index, row in data_frame.iterrows():
+            generic_item = GenericItem.objects.get(code=row[df_code])
+            generic_description = GenericDescription.objects.get(description=row[df_description])
+            generic_description_manytomany_with_generic_item.append(GenericDescription.generic_items.through(
+                genericdescription_id = generic_description.pk,
+                genericitem_id = generic_item.pk,
+                )
+            )
+        GenericDescription.generic_items.through.objects.bulk_create( generic_description_manytomany_with_generic_item, ignore_conflicts=True )
 
     def get_prepared_data_frame(self, type_file, response, source_file):
         if type_file == ANALITICO:
@@ -132,13 +145,16 @@ class FileXlsxProcessor:
         elif type_file == MAODEOBRA or type_file == MATERIAL:
             self.create_instancies_of_monetary_value(data_frame, type_file, source_file, dict_of_unit, CUSTO)
 
-    def get_dictionary_of_generic_item(self):
+    def get_dictionary_of_generic_item(self, field, group=None):
     ###### retorno de dicionários de instâncias GenericItem
-        return GenericItem.objects.filter(group=SINTETICO).in_bulk( field_name=df_code )
+        if group:
+             return GenericItem.objects.filter(group=group).in_bulk( field_name=field )
+        else:
+            return GenericItem.objects.in_bulk( field_name=field )
 
-    def get_dictionary_of_generic_description(self):
+    def get_dictionary_of_generic_description(self, field):
     ###### retorno de dicionários de instâncias GenericDescription
-        return GenericDescription.objects.all().in_bulk( field_name=df_description )
+        return GenericDescription.objects.in_bulk( field_name=field )
 
     def scrape_multiple_basic_data_from_analitic_composition(self, source_file, data_frame):
         code_list_from_analitic_composition = []
@@ -147,9 +163,10 @@ class FileXlsxProcessor:
         unit_list_from_analitic_composition = []
         fic_list_from_analitic_composition = []
         group_list_from_analitic_composition = []
+
         dict_of_unit = self.get_dictionary_of_unit()
-        dict_of_generic_item = self.get_dictionary_of_generic_item()
-        dict_of_generic_description = self.get_dictionary_of_generic_description()
+        dict_of_generic_item = self.get_dictionary_of_generic_item(field=df_code, group=SINTETICO)
+        dict_of_generic_description = self.get_dictionary_of_generic_description(field=df_description)
         composition_bulk_create_list = []
         for index, row in data_frame.iterrows():
             if row[df_code] == "SISTEMA DE CUSTOS REFERENCIAIS DE OBRAS - SICRO":
@@ -159,13 +176,12 @@ class FileXlsxProcessor:
                 unit_list_from_analitic_composition.append(dict_of_unit[row[df_unit]])
             elif row[df_production] == "Valores em reais (R$)":
                 code_list_from_analitic_composition.append(dict_of_generic_item[row[df_code]])
-                # description_list_from_analitic_composition.append( GenericDescription.objects.get( description=row[df_description] ) )
                 description_list_from_analitic_composition.append(dict_of_generic_description[row[df_description]])
                 group_list_from_analitic_composition.append(row[df_code][:2])
         
         for index, code in enumerate(code_list_from_analitic_composition):
             composition_bulk_create_list.append( Composition(
-                generic_item = code,
+                generic_item = code_list_from_analitic_composition[index],
                 generic_description = description_list_from_analitic_composition[index],
                 unit=unit_list_from_analitic_composition[index],
                 fic=fic_list_from_analitic_composition[index],
@@ -176,10 +192,66 @@ class FileXlsxProcessor:
             )
         Composition.objects.bulk_create( composition_bulk_create_list, ignore_conflicts=True )
 
+    def scrape_multiple_input_data_from_analitic_composition(self, source_file, data_frame):
+        code_list_from_analitic_composition = []
+
+        input_code_list_from_analitic_composition = []
+        input_description_list_from_analitic_composition = []
+        input_group_list_from_analitic_composition = []
+        input_quantity_list_from_analitic_composition = []
+        input_productive_use_list_from_analitic_composition = []
+        input_bulk_create_list = []
+
+        dict_of_generic_item = self.get_dictionary_of_generic_item(field=df_code)
+        dict_of_generic_description = self.get_dictionary_of_generic_description(field=df_description)
+
+        for index, row in data_frame.iterrows():
+            if row[df_production] == "Valores em reais (R$)":
+                generic_item = dict_of_generic_item[row[df_code]]
+
+                composition = Composition.objects.get( generic_item=generic_item.pk, source_file=source_file )
+                
+            elif re.match( r'[EA]\d{4}', str(row[df_code]) ):
+                code_list_from_analitic_composition.append( composition )
+                input_code_list_from_analitic_composition.append(dict_of_generic_item[row[df_code]])
+                input_description_list_from_analitic_composition.append(dict_of_generic_description[row[df_description]])
+                input_group_list_from_analitic_composition.append(EQUIPAMENTO)
+                input_quantity_list_from_analitic_composition.append(row[df_quantity])
+                input_productive_use_list_from_analitic_composition.append(row[df_productive_use])
+
+            elif re.match( r'[P]\d{4}', str(row[df_code]) ):
+                pass
+                # print("Mão-de-obra")
+            elif re.match( r'[M]\d{4}', str(row[df_code]) ) and ( type(row[df_productive_use]) == str ) and not( re.match( r'\d{7}', str(row[df_unproductive_use]) ) ) :
+                pass
+                # print("Material")
+            elif re.match( r'\d{7}', str(row[df_code]) ) and ( type(row[df_productive_use]) == str ) and not( re.match( r'\d{7}', str(row[df_unproductive_use]) ) ) :
+                pass
+                # print("Atividade auxiliar")
+            elif re.match( r'\d{7}', str(row[df_quantity]) ):
+                pass
+                # print("Tempo fixo")
+            elif re.match( r'\d{7}', str(row[df_unproductive_use]) ) and re.match( r'\d{7}', str(row[df_productive_cost]) ) and re.match( r'\d{7}', str(row[df_unproductive_cost]) ):
+                pass
+                # print("Transporte")
+
+        for index, code in enumerate(input_code_list_from_analitic_composition):
+            input_bulk_create_list.append( InputItem(
+                composition = code_list_from_analitic_composition[index],
+                generic_item = input_code_list_from_analitic_composition[index],
+                generic_description = input_description_list_from_analitic_composition[index],
+                input_group= input_group_list_from_analitic_composition[index],
+                input_quantity= input_quantity_list_from_analitic_composition[index],
+                input_use= input_productive_use_list_from_analitic_composition[index],
+                )
+            )
+        InputItem.objects.bulk_create( input_bulk_create_list, ignore_conflicts=True )
+
     def process_source_file(self, type_file, response, source_file):
         if type_file == ANALITICO:
             data_frame = self.get_prepared_data_frame(type_file, response, source_file)
             self.scrape_multiple_basic_data_from_analitic_composition(source_file, data_frame)
+            self.scrape_multiple_input_data_from_analitic_composition(source_file, data_frame)
         else:
             data_frame = self.get_prepared_data_frame(type_file, response, source_file)
             self.create_instancies_of_unit(data_frame)
@@ -192,3 +264,4 @@ class FileXlsxProcessor:
             descriptions = self.recover_list_of_instancies_at_generic_description()
             self.relate_many_to_many_generic_description_with_source_file(descriptions, source_file)
             self.relate_many_to_many_generic_item_with_source_file(items, source_file)
+            self.relate_many_to_many_generic_description_with_generic_item(data_frame)
