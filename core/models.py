@@ -39,7 +39,7 @@ class SourceFile(models.Model):
         verbose_name="Tipo de arquivo",
         max_length=2,
         choices=FILE,
-        default=ONERADO,
+        default=None,
         )
     status = models.BooleanField(
         verbose_name="Arquivo processado",
@@ -77,11 +77,17 @@ class SourceFile(models.Model):
 
 class Unit(models.Model):
 
-    #acrescentar um campo de dimensão
     unit = models.CharField(
         verbose_name="Unidade",
         max_length=10,
         default=None,
+        )
+    dimensional = models.CharField(
+        verbose_name="Dimensão",
+        max_length=10,
+        default=None,
+        blank=True,
+        null=True,
         )
 
     class Meta:
@@ -114,12 +120,6 @@ class GenericItem(models.Model):
         default=None,
         blank=True,
         )
-    group = models.CharField(
-        verbose_name="Grupo",
-        max_length=2,
-        choices=GENERIC_GROUP,
-        default=None,
-        )
 
     class Meta:
         verbose_name="Item genérico"
@@ -146,6 +146,7 @@ class GenericDescription(models.Model):
         )
     description = models.TextField(
         verbose_name="Descrição",
+        blank=True,
         unique=True,
         )
     source_files = models.ManyToManyField(
@@ -167,7 +168,7 @@ class GenericDescription(models.Model):
         verbose_name_plural="Descrições genéricas"
         constraints = [
             models.UniqueConstraint(
-               fields=['description',],
+               fields=['description','group'],
                name="unique_generic_description"
             )
         ]
@@ -223,6 +224,12 @@ class MonetaryValue(models.Model):
         choices=GENERIC_GROUP,
         default=None,
         )
+    type_system = models.CharField(
+        verbose_name="Tipo de sistema",
+        max_length=2,
+        choices=TYPE_SYSTEM,
+        default=NAO_APLICAVEL,
+        )
 
     class Meta:
         verbose_name="Valor monetário"
@@ -275,28 +282,25 @@ class Composition(models.Model):
         max_digits=18,
         decimal_places=5
         )
-    source_file = models.ForeignKey(
-        SourceFile,
-        verbose_name='Arquivo de origem',
-        on_delete=models.CASCADE,
-        related_name='compositions',
-        default=None,
-        null=True,
-        blank=True,
-        )
     composition_group = models.CharField(
         verbose_name="Grupo",
         max_length=2,
         choices=COMPOSITION_GROUP,
         )
-
+    source_files = models.ManyToManyField(
+        SourceFile,
+        verbose_name='Arquivos de origem',
+        related_name='compositions',
+        default=None,
+        blank=True,
+        )
 
     class Meta:
         verbose_name="Composição"
         verbose_name_plural="Composições"
         constraints = [
             models.UniqueConstraint(
-               fields=['generic_item', 'source_file'],
+               fields=['generic_item', 'unit', 'fic', 'production', 'composition_group'],
                name="unique_composition"
             )
         ]
@@ -305,13 +309,13 @@ class Composition(models.Model):
         return str(self.generic_item) + ' - ' + str(self.generic_description)
 
 
-class InputItem(models.Model):
+class EquipmentItem(models.Model):
 
     composition = models.ForeignKey(
         Composition,
         verbose_name="Composição",
         on_delete=models.CASCADE,
-        related_name='inputs',
+        related_name='equipments',
         default=None,
         null=True,
         blank=True,
@@ -320,7 +324,7 @@ class InputItem(models.Model):
         GenericItem,
         verbose_name="Código",
         on_delete=models.CASCADE,
-        related_name='inputs',
+        related_name='equipments',
         default=None,
         null=True,
         blank=True,
@@ -329,15 +333,19 @@ class InputItem(models.Model):
         GenericDescription,
         verbose_name="Descrição",
         on_delete=models.CASCADE,
-        related_name='inputs',
+        related_name='equipments',
         default=None,
         null=True,
         blank=True,
         )
-    input_group = models.CharField(
-        verbose_name="Grupo",
-        max_length=2,
-        choices=INPUT_GROUP,
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name='Unidade',
+        on_delete=models.CASCADE,
+        related_name='equipments',
+        default=None,
+        null=True,
+        blank=True,
         )
     input_quantity = models.DecimalField(
         verbose_name="Quantidade",
@@ -348,23 +356,249 @@ class InputItem(models.Model):
         verbose_name="Utilização",
         max_digits=18,
         decimal_places=5,
-        default=1.0,
+        default=None,
         null=True,
+        blank=True,
+        )
+    input_group = models.CharField(
+        verbose_name="Grupo",
+        max_length=2,
+        choices=INPUT_GROUP,
+        default=EQUIPAMENTO,
+        )
+    source_files = models.ManyToManyField(
+        SourceFile,
+        verbose_name='Arquivos de origem',
+        related_name='equipments',
+        default=None,
         blank=True,
         )
 
     class Meta:
-        verbose_name="Insumo"
-        verbose_name_plural="Insumos"
+        verbose_name="Equipamento"
+        verbose_name_plural="Equipamentos"
         constraints = [
             models.UniqueConstraint(
-               fields=['composition', 'generic_item'],
-               name="unique_input"
+               fields=['composition', 'generic_item', 'input_quantity', 'input_use'],
+               name="unique_equipment_item"
             )
         ]
     
     def __str__(self):
-        return str(self.composition) + ' - ' + str(self.generic_item) + ' - ' + str(self.generic_description)
+        return str(self.composition.generic_item.code) + ' - ' + str(self.generic_item) + ' - ' + str(self.generic_description)
+
+
+class WorkmanItem(models.Model):
+
+    composition = models.ForeignKey(
+        Composition,
+        verbose_name="Composição",
+        on_delete=models.CASCADE,
+        related_name='workmen',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    generic_item = models.ForeignKey(
+        GenericItem,
+        verbose_name="Código",
+        on_delete=models.CASCADE,
+        related_name='workmen',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    generic_description = models.ForeignKey(
+        GenericDescription,
+        verbose_name="Descrição",
+        on_delete=models.CASCADE,
+        related_name='workmen',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name='Unidade',
+        on_delete=models.CASCADE,
+        related_name='workmen',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    input_quantity = models.DecimalField(
+        verbose_name="Quantidade",
+        max_digits=18,
+        decimal_places=5,
+        )
+    input_group = models.CharField(
+        verbose_name="Grupo",
+        max_length=2,
+        choices=INPUT_GROUP,
+        default=MAODEOBRA,
+        )
+    source_files = models.ManyToManyField(
+        SourceFile,
+        verbose_name='Arquivos de origem',
+        related_name='workmen',
+        default=None,
+        blank=True,
+        )
+
+    class Meta:
+        verbose_name="Mão-de-obra"
+        verbose_name_plural="Mão-de-obra"
+        constraints = [
+            models.UniqueConstraint(
+               fields=['composition', 'generic_item', 'input_quantity'],
+               name="unique_workman_item"
+            )
+        ]
+    
+    def __str__(self):
+        return str(self.composition.generic_item.code) + ' - ' + str(self.generic_item) + ' - ' + str(self.generic_description)
+
+
+class MaterialItem(models.Model):
+
+    composition = models.ForeignKey(
+        Composition,
+        verbose_name="Composição",
+        on_delete=models.CASCADE,
+        related_name='materials',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    generic_item = models.ForeignKey(
+        GenericItem,
+        verbose_name="Código",
+        on_delete=models.CASCADE,
+        related_name='materials',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    generic_description = models.ForeignKey(
+        GenericDescription,
+        verbose_name="Descrição",
+        on_delete=models.CASCADE,
+        related_name='materials',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name='Unidade',
+        on_delete=models.CASCADE,
+        related_name='materials',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    input_quantity = models.DecimalField(
+        verbose_name="Quantidade",
+        max_digits=18,
+        decimal_places=5,
+        )
+    input_group = models.CharField(
+        verbose_name="Grupo",
+        max_length=2,
+        choices=INPUT_GROUP,
+        default=MATERIAL,
+        )
+    source_files = models.ManyToManyField(
+        SourceFile,
+        verbose_name='Arquivos de origem',
+        related_name='materials',
+        default=None,
+        blank=True,
+        )
+
+    class Meta:
+        verbose_name="Material"
+        verbose_name_plural="Materiais"
+        constraints = [
+            models.UniqueConstraint(
+               fields=['composition', 'generic_item', 'input_quantity'],
+               name="unique_material_item"
+            )
+        ]
+    
+    def __str__(self):
+        return str(self.composition.generic_item.code) + ' - ' + str(self.generic_item) + ' - ' + str(self.generic_description)
+    
+
+class AuxiliaryActivityItem(models.Model):
+
+    composition = models.ForeignKey(
+        Composition,
+        verbose_name="Composição",
+        on_delete=models.CASCADE,
+        related_name='activities',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    generic_item = models.ForeignKey(
+        GenericItem,
+        verbose_name="Código",
+        on_delete=models.CASCADE,
+        related_name='activities',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    generic_description = models.ForeignKey(
+        GenericDescription,
+        verbose_name="Descrição",
+        on_delete=models.CASCADE,
+        related_name='activities',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name='Unidade',
+        on_delete=models.CASCADE,
+        related_name='activities',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    input_quantity = models.DecimalField(
+        verbose_name="Quantidade",
+        max_digits=18,
+        decimal_places=5,
+        )
+    input_group = models.CharField(
+        verbose_name="Grupo",
+        max_length=2,
+        choices=INPUT_GROUP,
+        default=AUXILIAR,
+        )
+    source_files = models.ManyToManyField(
+        SourceFile,
+        verbose_name='Arquivos de origem',
+        related_name='activities',
+        default=None,
+        blank=True,
+        )
+
+    class Meta:
+        verbose_name="Atividade auxiliar"
+        verbose_name_plural="Atividades auxiliares"
+        constraints = [
+            models.UniqueConstraint(
+               fields=['composition', 'generic_item', 'input_quantity'],
+               name="unique_activity_item"
+            )
+        ]
+    
+    def __str__(self):
+        return str(self.composition.generic_item.code) + ' - ' + str(self.generic_item) + ' - ' + str(self.generic_description)
 
 
 class TransportItem(models.Model):
@@ -374,14 +608,6 @@ class TransportItem(models.Model):
         verbose_name="Composição",
         on_delete=models.CASCADE,
         related_name='transports',
-        default=None,
-        null=True,
-        blank=True,
-        )
-    related_input = models.ForeignKey(
-        Composition,
-        verbose_name='Insumo proprietário',
-        on_delete=models.CASCADE,
         default=None,
         null=True,
         blank=True,
@@ -413,18 +639,43 @@ class TransportItem(models.Model):
         null=True,
         blank=True,
         )
-    transport_group = models.CharField(
+    input_quantity = models.DecimalField(
+        verbose_name="Quantidade",
+        max_digits=18,
+        decimal_places=5,
+        )
+    input_group = models.CharField(
         verbose_name="Grupo",
         max_length=2,
         choices=INPUT_GROUP,
+        default=None,
         )
-    
+    proprietary_item = models.ForeignKey(
+        GenericItem,
+        verbose_name='Insumo proprietário',
+        on_delete=models.CASCADE,
+        related_name='proprietaries',
+        default=None,
+        null=True,
+        blank=True,
+        )
+    source_files = models.ManyToManyField(
+        SourceFile,
+        verbose_name='Arquivos de origem',
+        related_name='transports',
+        default=None,
+        blank=True,
+        )
+
     class Meta:
         verbose_name="Transporte"
         verbose_name_plural="Transportes"
         constraints = [
             models.UniqueConstraint(
-               fields=['composition', 'related_input', 'generic_item', 'generic_description', 'unit', 'transport_group'],
-               name="unique_transport"
+               fields=['composition', 'generic_item', 'input_quantity', 'proprietary_item'],
+               name="unique_transport_item"
             )
         ]
+    
+    def __str__(self):
+        return str(self.composition.generic_item.code) + ' - ' + str(self.generic_item) + ' - ' + str(self.generic_description)

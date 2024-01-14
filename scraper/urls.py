@@ -19,17 +19,15 @@ from django.urls import path
 
 from django.conf.urls import include
 from rest_framework import routers
-from core.api.viewsets import SourceFileViewSet, GenericDescriptionViewSet, GenericItemViewSet, UnitViewSet, MonetaryValueViewSet, CompositionViewSet
+from core.api.viewsets import SourceFileViewSet, GenericItemViewSet, UnitViewSet, MonetaryValueViewSet, CompositionViewSet
 
 
 router = routers.DefaultRouter()
 router.register(r'arquivos-base', SourceFileViewSet, basename='SourceFile')
-router.register(r'descricoes', GenericDescriptionViewSet, basename='GenericDescription')
-router.register(r'codigos', GenericItemViewSet, basename='GenericItem')
+router.register(r'items', GenericItemViewSet, basename='GenericItem')
 router.register(r'unidades', UnitViewSet, basename='Unit')
 router.register(r'valores', MonetaryValueViewSet, basename='MonetaryValue')
 router.register(r'composicoes', CompositionViewSet, basename='Composition')
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),

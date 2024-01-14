@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db.models import QuerySet
 from django.http import HttpRequest
-from core.models import SourceFile, Composition, InputItem, GenericItem, GenericDescription, MonetaryValue
+from core.models import SourceFile, Composition, EquipmentItem, WorkmanItem, MaterialItem, AuxiliaryActivityItem, TransportItem, GenericItem, GenericDescription, MonetaryValue
 
 from django.contrib import messages
 from django.utils.translation import ngettext
@@ -59,12 +59,32 @@ class SourceFileAdmin(admin.ModelAdmin):
 
 class CompositionAdmin(admin.ModelAdmin):
 
-    order_by = ['composition_group','source_file',]
-    list_filter = ['composition_group','source_file__data_base',]
+    order_by = ['composition_group','source_files',]
+    list_filter = ['composition_group',]
     search_fields = ['generic_item__code', 'generic_description__description']
 
 
-class InputItemAdmin(admin.ModelAdmin):
+class EquipmentItemAdmin(admin.ModelAdmin):
+
+    search_fields = ['composition__source_file','generic_description__description',]
+
+
+class WorkmanItemAdmin(admin.ModelAdmin):
+
+    search_fields = ['composition__source_file','generic_description__description',]
+
+
+class MaterialItemAdmin(admin.ModelAdmin):
+
+    search_fields = ['composition__source_file','generic_description__description',]
+
+
+class AuxiliaryActivitytemAdmin(admin.ModelAdmin):
+
+    search_fields = ['composition__source_file','generic_description__description',]
+
+
+class TransportItemAdmin(admin.ModelAdmin):
 
     search_fields = ['composition__source_file','generic_description__description',]
 
@@ -74,7 +94,7 @@ class GenericItemAdmin(admin.ModelAdmin):
     order_by = 'code'
     list_display = [ 'code',]
     search_fields = ['code',]
-    list_filter = [ 'group', 'source_files', ]
+    list_filter = [ 'source_files', ]
 
 
 class GenericDescriptionAdmin(admin.ModelAdmin):
@@ -90,7 +110,7 @@ class MonetaryValueAdmin(admin.ModelAdmin):
     order_by = 'generic_item'
     list_display = [ 'generic_item', 'monetary_value', 'unit']
     search_fields = [ 'generic_item__code',]
-    list_filter = [ 'classification', 'source_file',]
+    list_filter = [ 'type_system', 'classification', 'source_file',]
 
 
 admin.site.register(MonetaryValue, MonetaryValueAdmin)
@@ -98,4 +118,8 @@ admin.site.register(GenericDescription, GenericDescriptionAdmin)
 admin.site.register(GenericItem, GenericItemAdmin)
 admin.site.register(SourceFile, SourceFileAdmin)
 admin.site.register(Composition, CompositionAdmin)
-admin.site.register(InputItem, InputItemAdmin)
+admin.site.register(EquipmentItem, EquipmentItemAdmin)
+admin.site.register(WorkmanItem, WorkmanItemAdmin)
+admin.site.register(MaterialItem, MaterialItemAdmin)
+admin.site.register(AuxiliaryActivityItem, AuxiliaryActivitytemAdmin)
+admin.site.register(TransportItem, TransportItemAdmin)

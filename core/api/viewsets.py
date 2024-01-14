@@ -4,8 +4,8 @@ from rest_framework import filters
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from rest_framework.viewsets import ModelViewSet
-from core.models import  SourceFile, GenericItem, GenericDescription, Unit, MonetaryValue, Composition, InputItem
-from core.api.serializers import SourceFileSerializer, GenericItemSerializer, GenericDescriptionSerializer, UnitSerializer, MonetaryValueSerializer, CompositionSerializer, InputItemSerializer
+from core.models import SourceFile, Composition, EquipmentItem, WorkmanItem, MaterialItem, AuxiliaryActivityItem, TransportItem, GenericItem, GenericDescription, Unit, MonetaryValue
+from core.api.serializers import SourceFileSerializer, GenericItemSerializer, GenericDescriptionSerializer, UnitSerializer, MonetaryValueSerializer, CompositionSerializer, EquipmentItemSerializer, WorkmanItemSerializer, MaterialItemSerializer, AuxiliaryActivityItemSerializer, TransportItemSerializer
 from core.api.filters import SourceFileFilter, GenericItemFilter, GenericDescriptionFilter, MonetaryValueFilter, CompositionFilter
 
 
@@ -46,7 +46,7 @@ class GenericDescriptionViewSet(ModelViewSet):
     filterset_class = GenericDescriptionFilter
 
     def get_queryset(self):           
-        return GenericDescription.objects.all()
+        return GenericDescription.objects.prefetch_related('source_files').all()
 
 
 class GenericItemViewSet(ModelViewSet):
@@ -63,7 +63,7 @@ class GenericItemViewSet(ModelViewSet):
     filterset_class = GenericItemFilter
 
     def get_queryset(self):           
-        return GenericItem.objects.all()
+        return GenericItem.objects.prefetch_related('source_files').prefetch_related('descriptions').all()
 
 
 class UnitViewSet(ModelViewSet):
@@ -97,7 +97,7 @@ class MonetaryValueViewSet(ModelViewSet):
     
     def get_queryset(self):           
         return MonetaryValue.objects.all()
-
+    
 
 class CompositionViewSet(ModelViewSet):
 
@@ -113,4 +113,4 @@ class CompositionViewSet(ModelViewSet):
     filterset_class = CompositionFilter
 
     def get_queryset(self):           
-        return Composition.objects.all()
+        return Composition.objects.prefetch_related('source_files').all()
