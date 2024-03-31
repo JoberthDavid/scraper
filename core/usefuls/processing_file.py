@@ -1,26 +1,46 @@
 from decimal import Decimal
 import pandas as pd
+import numpy as np
 from sqlalchemy import create_engine
 
 from scraper.settings import default_dburl, DATABASES, dburl
 
-from core.models import SourceFile, Composition, EquipmentItem, WorkmanItem, MaterialItem, AuxiliaryActivityItem, TransportItem, GenericItem, GenericDescription, Unit, MonetaryValue
+from core.usefuls.data_structure import *
+from core.models import *
 from core.usefuls.choices import *
 import re
 
 from django.db.models import Prefetch
-from django.db.models import Q
 
 from django.db import connection, reset_queries
 import time
 
 
-class FileXlsxProcessor:
+class FileXlsxPreparer:
 
-    def __init__(self, response: dict, type_file: str, source_file: SourceFile) -> None:
-        self.process_source_file( type_file=type_file, response=response, source_file=source_file )
+    def get_data_frame_prepared(self, response: dict, type_file: str, source_file: SourceFile) -> pd.core.frame.DataFrame:
+        if type_file == ANALITICO:
+            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_quantity, df_productive_use, df_unproductive_use, df_productive_cost, df_unproductive_cost, df_production, df_unit] )#, converters={df_code:str, df_description:str, df_quantity:str, df_productive_use:str, df_unproductive_use:str, df_productive_cost:str, df_unproductive_cost:str, df_production:str, df_unit:str} )
+            data_frame[df_production].fillna(0.0, inplace=True)
+        elif type_file == SINTETICO:
+            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_unit, df_monetary_value], converters={df_code:str, df_description:str, df_unit:str, df_monetary_value:float}, skiprows=source_file.number_of_lines_to_skip)        
+        elif type_file == EQUIPAMENTO:
+            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_purchase_value, df_deprecation, df_equity_opportunity, df_insurance_and_taxes, df_maintenance, df_operation, df_labor, df_productive_cost, df_unproductive_cost], converters={df_code:str, df_description:str, df_purchase_value:float, df_deprecation:float, df_equity_opportunity:float, df_insurance_and_taxes:float, df_maintenance:float, df_operation:float, df_labor:float, df_productive_cost:float, df_unproductive_cost:float}, skiprows=source_file.number_of_lines_to_skip).assign(unit="h")        
+        elif type_file == MAODEOBRA:
+            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_unit, df_wage, df_charges, df_monetary_value, df_unhealthy], converters={df_code:str, df_description:str, df_unit:str, df_wage:float, df_charges:float, df_monetary_value:float, df_unhealthy:float}, skiprows=source_file.number_of_lines_to_skip)
+        elif type_file == MATERIAL:
+            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_unit, df_monetary_value], converters={df_code:str, df_description:str, df_unit:str}, skiprows=source_file.number_of_lines_to_skip)
+            data_frame[df_monetary_value].replace(['-'], [0.0], inplace=True)
+            data_frame[df_monetary_value] = data_frame[df_monetary_value].astype(float)
+        return data_frame
 
-    def get_or_create_instancies_of_unit(self, data_frame):
+
+class UnitPreparer:
+
+    def __init__(self, data_frame: pd.core.frame.DataFrame ) -> None:
+        self.get_or_create_instancies_of_unit( data_frame=data_frame )
+
+    def get_or_create_instancies_of_unit(self, data_frame: pd.core.frame.DataFrame) -> None:
     ###### criação das instâncias Unit
         for index, row in data_frame.iterrows():
             object, created = Unit.objects.get_or_create(
@@ -28,11 +48,53 @@ class FileXlsxProcessor:
                 dimensional=None,
             )
 
-    def get_collection_of_unit(self):
+    @classmethod
+    def get_collection_of_unit(self) -> dict:
     ###### retorno de coleção de instâncias Unit
         return Unit.objects.all().in_bulk( field_name=df_unit )
 
-    def create_instancies_of_generic_item(self, data_frame, type_file):
+
+class MonetaryValuePreparer:
+
+    def __init__(self, data_frame: pd.core.frame.DataFrame, type_file: str, source_file: SourceFile, related_items: dict, units: dict):
+        self.switch_monetary_value(data_frame=data_frame, type_file=type_file, source_file=source_file, related_items=related_items, units=units)
+
+    def create_instancies_of_monetary_value(self, data_frame: pd.core.frame.DataFrame, type_file: str, source_file: SourceFile, related_items: dict, units: dict, classification: str, monetary_value: str):
+    ###### criação das instâncias MonetaryValue
+        monetary_value_bulk_create_list = []
+        if type_file == SINTETICO:
+            group = COMPOSICAO
+        else:
+            group = type_file
+        for index, row in data_frame.iterrows():
+            monetary_value_bulk_create_list.append( MonetaryValue(
+                generic_item = related_items[row[df_code]],
+                source_file = source_file,
+                unit = units[row[df_unit]],
+                monetary_value = row[monetary_value],
+                classification = classification,
+                group = group,
+                type_system = source_file.type_system,
+                )
+            )
+        MonetaryValue.objects.bulk_create( monetary_value_bulk_create_list, ignore_conflicts=True )
+
+    def switch_monetary_value(self, data_frame: pd.core.frame.DataFrame, type_file: str, source_file: SourceFile, related_items: dict, units: dict):
+        if type_file == SINTETICO:
+            self.create_instancies_of_monetary_value(data_frame=data_frame, type_file=COMPOSICAO, source_file=source_file, related_items=related_items, units=units, classification=PRECO, monetary_value=df_monetary_value)
+        elif type_file == EQUIPAMENTO:
+            self.create_instancies_of_monetary_value(data_frame=data_frame, type_file=type_file, source_file=source_file, related_items=related_items, units=units, classification=PRODUTIVO, monetary_value=df_productive_cost)
+            self.create_instancies_of_monetary_value(data_frame=data_frame, type_file=type_file, source_file=source_file, related_items=related_items, units=units, classification=IMPRODUTIVO, monetary_value=df_unproductive_cost)
+        elif type_file == MAODEOBRA or type_file == MATERIAL:
+            self.create_instancies_of_monetary_value(data_frame=data_frame, type_file=type_file, source_file=source_file, related_items=related_items, units=units, classification=CUSTO, monetary_value=df_monetary_value)
+
+
+class GenericItemPreparer:
+
+    def __init__(self, data_frame: pd.core.frame.DataFrame) -> None:
+        self.create_instancies_of_generic_item(data_frame=data_frame)
+
+    def create_instancies_of_generic_item(self, data_frame: pd.core.frame.DataFrame) -> None:
     ###### criação das instâncias GenericItem
         generic_item_bulk_create_list = []
         for index, row in data_frame.iterrows():
@@ -42,7 +104,17 @@ class FileXlsxProcessor:
             )
         GenericItem.objects.bulk_create( generic_item_bulk_create_list, ignore_conflicts=True )
 
-    def create_instancies_of_generic_description(self, data_frame, type_file):
+    def get_collection_of_generic_item_unrelated(self) -> dict:
+    ###### retorno de coleção de instâncias GenericItem sem relacionamentos construídos
+        return GenericItem.objects.in_bulk(field_name='code')
+
+
+class GenericDescriptionPreparer:
+
+    def __init__(self, data_frame: pd.core.frame.DataFrame, type_file) -> None:
+        self.create_instancies_of_generic_description(data_frame=data_frame, type_file=type_file)
+
+    def create_instancies_of_generic_description(self, data_frame: pd.core.frame.DataFrame, type_file) -> None:
     ###### criação das instâncias GenericDescription
         generic_description_bulk_create_list = []
         if type_file == SINTETICO:
@@ -56,47 +128,56 @@ class FileXlsxProcessor:
                 )
             )
         GenericDescription.objects.bulk_create( generic_description_bulk_create_list, ignore_conflicts=True )
- 
-    def create_instancies_of_monetary_value(self, collection_of_related_items, data_frame, type_file, source_file, collection_of_unit, classification, monetary_value=df_monetary_value):
-    ###### criação das instâncias MonetaryValue
-        monetary_value_bulk_create_list = []
-        if type_file == SINTETICO:
-            group = COMPOSICAO
-        else:
-            group = type_file
-        for index, row in data_frame.iterrows():
-            monetary_value_bulk_create_list.append( MonetaryValue(
-                generic_item = collection_of_related_items[row[df_code]],
-                source_file = source_file,
-                unit = collection_of_unit[row[df_unit]],
-                monetary_value = row[monetary_value],
-                classification = classification,
-                group = group,
-                type_system = source_file.type_system,
-                )
-            )
-        MonetaryValue.objects.bulk_create( monetary_value_bulk_create_list, ignore_conflicts=True )
 
-    def get_collection_of_generic_item_unrelated(self):
-    ###### retorno de coleção de instâncias GenericItem sem relacionamentos construídos
-        return GenericItem.objects.in_bulk(field_name='code')
-
-    def get_collection_of_generic_description_unrelated(self):
+    def get_collection_of_generic_description_unrelated(self) -> dict:
     ###### retorno de coleção de instâncias GenericDescription sem relacionamentos construídos
         return GenericDescription.objects.in_bulk(field_name='description')
 
-    def relate_many_to_many_generic_item_with_source_file(self, data_frame, collection_of_unrelated_items, source_file):
+
+class SourceFilePreparer:
+
+    def __init__(self, data_frame: pd.core.frame.DataFrame, unrelated_items: dict, unrelated_descriptions: dict, source_file: SourceFile) -> None:
+        self.relate_many_to_many_generic_item_with_source_file(data_frame=data_frame, unrelated_items=unrelated_items, source_file=source_file)
+        self.relate_many_to_many_generic_description_with_source_file(data_frame=data_frame, unrelated_descriptions=unrelated_descriptions, source_file=source_file)
+        related_items = self.get_collection_of_generic_item_related_with_source_file(field=df_code, source_file=source_file)
+        related_descriptions = self.get_collection_of_generic_description_related_with_source_file(field=df_description, source_file=source_file)
+        self.relate_many_to_many_generic_description_with_generic_item(data_frame=data_frame, related_items=related_items, related_descriptions=related_descriptions)
+
+    def relate_many_to_many_generic_item_with_source_file(self, data_frame: pd.core.frame.DataFrame, unrelated_items: dict, source_file: SourceFile) -> None:
     ###### criação das instâncias de relacionamento manytomany entre GenericItem e SourceFile
         generic_item_manytomany = []
         for index, row in data_frame.iterrows():
             generic_item_manytomany.append(GenericItem.source_files.through(
-                genericitem_id = collection_of_unrelated_items[ row[df_code] ].pk,
+                genericitem_id = unrelated_items[ row[df_code] ].pk,
                 sourcefile_id = source_file.pk,
                 )
             )
         GenericItem.source_files.through.objects.bulk_create( generic_item_manytomany, ignore_conflicts=True )
 
-    def get_collection_of_generic_item_related_with_source_file(self, field, source_file, group=None):
+    def relate_many_to_many_generic_description_with_source_file(self, data_frame: pd.core.frame.DataFrame, unrelated_descriptions: dict, source_file: SourceFile) -> None:
+    ###### criação das instâncias de relacionamento manytomany entre GenericDescription e SourceFile
+        generic_description_manytomany_with_source_file = []
+        for index, row in data_frame.iterrows():
+            generic_description_manytomany_with_source_file.append(GenericDescription.source_files.through(
+                genericdescription_id = unrelated_descriptions[ row[df_description] ].pk,
+                sourcefile_id = source_file.pk,
+                )
+            )
+        GenericDescription.source_files.through.objects.bulk_create( generic_description_manytomany_with_source_file, ignore_conflicts=True )
+
+    def relate_many_to_many_generic_description_with_generic_item(self, data_frame: pd.core.frame.DataFrame, related_items: dict, related_descriptions: dict) -> None:
+    ###### criação das instâncias de relacionamento manytomany entre GenericDescription e GenericItem
+        generic_description_manytomany_with_generic_item = []
+        for index, row in data_frame.iterrows():
+            generic_description_manytomany_with_generic_item.append(GenericDescription.generic_items.through(
+                genericdescription_id = related_descriptions[ row[df_description] ].pk,
+                genericitem_id = related_items[ row[df_code] ].pk,
+                )
+            )
+        GenericDescription.generic_items.through.objects.bulk_create( generic_description_manytomany_with_generic_item, ignore_conflicts=True )
+
+    @classmethod
+    def get_collection_of_generic_item_related_with_source_file(self, field: str, source_file: SourceFile, group=None) -> dict:
     ###### retorno de coleção de instâncias GenericItem
         if not(group):
             return GenericItem.objects.filter(source_files__data_base=source_file.data_base).in_bulk( field_name=field )
@@ -105,106 +186,44 @@ class FileXlsxProcessor:
         else:
             return GenericItem.objects.filter(source_files__data_base=source_file.data_base).filter(source_files__type_file=group).in_bulk( field_name=field )
 
-    def get_collection_of_generic_description_related_with_source_file(self, field, source_file):
+    @classmethod
+    def get_collection_of_generic_description_related_with_source_file(self, field: str, source_file: SourceFile) -> dict:
     ###### retorno de coleção de instâncias GenericDescription
-        return GenericDescription.objects.filter(source_files__data_base=source_file.data_base).in_bulk( field_name=field )
+        return GenericDescription.objects.filter(source_files__data_base=source_file.data_base).in_bulk( field_name=field )        
 
-    def relate_many_to_many_generic_description_with_source_file(self, data_frame, collection_of_unrelated_descriptions, source_file):
-    ###### criação das instâncias de relacionamento manytomany entre GenericDescription e SourceFile
-        generic_description_manytomany_with_source_file = []
-        for index, row in data_frame.iterrows():
-            generic_description_manytomany_with_source_file.append(GenericDescription.source_files.through(
-                genericdescription_id = collection_of_unrelated_descriptions[ row[df_description] ].pk,
-                sourcefile_id = source_file.pk,
-                )
-            )
-        GenericDescription.source_files.through.objects.bulk_create( generic_description_manytomany_with_source_file, ignore_conflicts=True )
 
-    def relate_many_to_many_generic_description_with_generic_item(self, data_frame, collection_of_related_items, collection_of_related_descriptions):
-    ###### criação das instâncias de relacionamento manytomany entre GenericDescription e GenericItem
-        generic_description_manytomany_with_generic_item = []
-        for index, row in data_frame.iterrows():
-            generic_description_manytomany_with_generic_item.append(GenericDescription.generic_items.through(
-                genericdescription_id = collection_of_related_descriptions[ row[df_description] ].pk,
-                genericitem_id = collection_of_related_items[ row[df_code] ].pk,
-                )
-            )
-        GenericDescription.generic_items.through.objects.bulk_create( generic_description_manytomany_with_generic_item, ignore_conflicts=True )
+class BasicDataCompositionPreparer:
 
-    def get_prepared_data_frame(self, type_file, response, source_file):
-        if type_file == ANALITICO:
-            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_quantity, df_productive_use, df_unproductive_use, df_productive_cost, df_unproductive_cost, df_production, df_unit] )
-            data_frame[df_production].fillna(0.0, inplace=True)
-        elif type_file == SINTETICO:
-            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_unit, df_monetary_value], converters={df_code:str, df_description:str, df_unit:str, df_monetary_value:float}, skiprows=source_file.number_of_lines_to_skip)        
-        elif type_file == EQUIPAMENTO:
-            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_purchase_value, df_deprecation, df_equity_opportunity, df_insurance_and_taxes, df_maintenance, df_operation, df_labor, df_productive_cost, df_unproductive_cost], converters={df_code:str, df_description:str, df_purchase_value:float, df_deprecation:float, df_equity_opportunity:float, df_insurance_and_taxes:float, df_maintenance:float, df_operation:float, df_labor:float, df_productive_cost:float, df_unproductive_cost:float}, skiprows=source_file.number_of_lines_to_skip).assign(unit="h")        
-        elif type_file == MAODEOBRA:
-            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_unit, df_wage, df_charges, df_monetary_value, df_unhealthy], converters={df_code:str, df_description:str, df_unit:str, df_wage:float, df_charges:float, df_monetary_value:float, df_unhealthy:float}, skiprows=source_file.number_of_lines_to_skip)        
-        elif type_file == MATERIAL:
-            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_unit, df_monetary_value], converters={df_code:str, df_description:str, df_unit:str}, skiprows=source_file.number_of_lines_to_skip)
-            data_frame[df_monetary_value].replace(['-'], [0.0], inplace=True)
-            data_frame[df_monetary_value] = data_frame[df_monetary_value].astype(float)
-        return data_frame
+    def __init__(self, data_frame: pd.core.frame.DataFrame, source_file: SourceFile) -> None:
+        self.scrape_multiple_basic_data_from_analitic_composition(data_frame=data_frame, source_file=source_file)
+        compositions = self.get_collection_of_composition(source_file=source_file)
+        self.relate_many_to_many_composition_with_source_file(compositions=compositions,source_file=source_file)
 
-    def switch_monetary_value(self, collection_of_related_items, data_frame, type_file, source_file, collection_of_unit):
-        if type_file == SINTETICO:
-            self.create_instancies_of_monetary_value(collection_of_related_items, data_frame, COMPOSICAO, source_file, collection_of_unit, PRECO)
-        elif type_file == EQUIPAMENTO:
-            self.create_instancies_of_monetary_value(collection_of_related_items, data_frame, type_file, source_file, collection_of_unit, PRODUTIVO, monetary_value=df_productive_cost)
-            self.create_instancies_of_monetary_value(collection_of_related_items, data_frame, type_file, source_file, collection_of_unit, IMPRODUTIVO, monetary_value=df_unproductive_cost)
-        elif type_file == MAODEOBRA or type_file == MATERIAL:
-            self.create_instancies_of_monetary_value(collection_of_related_items, data_frame, type_file, source_file, collection_of_unit, CUSTO)
+    def scrape_multiple_basic_data_from_analitic_composition(self, data_frame: pd.core.frame.DataFrame, source_file: SourceFile) -> None:
+        collection_of_unit = UnitPreparer.get_collection_of_unit()
+        collection_of_generic_item = SourceFilePreparer.get_collection_of_generic_item_related_with_source_file(field=df_code, source_file=source_file, group=COMPOSICAO)
+        collection_of_generic_description = SourceFilePreparer.get_collection_of_generic_description_related_with_source_file(field=df_description, source_file=source_file)
+        composition_collection = CompositionPreparer()
 
-    def scrape_multiple_basic_data_from_analitic_composition(self, source_file, data_frame):
-        code_list_from_analitic_composition = []
-        description_list_from_analitic_composition = []
-        production_list_from_analitic_composition = []
-        unit_list_from_analitic_composition = []
-        fic_list_from_analitic_composition = []
-        group_list_from_analitic_composition = []
-
-        collection_of_unit = self.get_collection_of_unit()
-        collection_of_generic_item = self.get_collection_of_generic_item_related_with_source_file(field=df_code, source_file=source_file, group=COMPOSICAO)
-        collection_of_generic_description = self.get_collection_of_generic_description_related_with_source_file(field=df_description, source_file=source_file)
-        composition_bulk_create_list = []
         for index, row in data_frame.iterrows():
             if row[df_code] == "SISTEMA DE CUSTOS REFERENCIAIS DE OBRAS - SICRO":
-                try:
-                    fic_list_from_analitic_composition.append( row[df_production] )
-                except:
-                    break
+                    composition_collection.append_fic( row[df_production] )
             elif row[df_code] == "Custo Unitário de Referência":
-                try:
-                    production_list_from_analitic_composition.append( row[df_production] )
-                    unit_list_from_analitic_composition.append(collection_of_unit[row[df_unit]] )
-                except:
-                    break
+                    composition_collection.append_production( row[df_production] )
+                    composition_collection.append_unit( collection_of_unit[row[df_unit]] )
             elif row[df_production] == "Valores em reais (R$)":
-                try:
-                    code_list_from_analitic_composition.append(collection_of_generic_item[row[df_code]] )
-                    description_list_from_analitic_composition.append(collection_of_generic_description[row[df_description]] )
-                    group_list_from_analitic_composition.append( row[df_code][:2] )
-                except:
-                    break
-        
-        for index, code in enumerate(code_list_from_analitic_composition):
-            composition_bulk_create_list.append( Composition(
-                generic_item = code_list_from_analitic_composition[index],
-                generic_description = description_list_from_analitic_composition[index],
-                unit=unit_list_from_analitic_composition[index],
-                fic=fic_list_from_analitic_composition[index],
-                production=production_list_from_analitic_composition[index],
-                composition_group=group_list_from_analitic_composition[index],
-                )
-            )
-        Composition.objects.bulk_create( composition_bulk_create_list, ignore_conflicts=True )
+                    composition_collection.append_code( collection_of_generic_item[row[df_code]] )
+                    composition_collection.append_description( collection_of_generic_description[row[df_description]] )
+                    composition_collection.append_group( row[df_code][:2] )
+        lista = composition_collection.get_bulk_create_list()
 
-    def get_collection_of_composition(self, source_file):
+        return Composition.objects.bulk_create( lista, ignore_conflicts=True )
+
+    def get_collection_of_composition(self, source_file: SourceFile) -> dict:
     ###### retorno de coleção de instâncias Composition
         return Composition.objects.select_related('generic_item').filter(generic_item__source_files__data_base=source_file.data_base).in_bulk()
 
-    def relate_many_to_many_composition_with_source_file(self, compositions, source_file):
+    def relate_many_to_many_composition_with_source_file(self, compositions: dict, source_file: SourceFile) -> None:
     ###### criação das instâncias de relacionamento manytomany entre Composition e SourceFile
         composition_manytomany_with_source_file = []
         for composition in compositions:
@@ -213,54 +232,16 @@ class FileXlsxProcessor:
                 sourcefile_id = source_file.pk,
                 )
             )
-        Composition.source_files.through.objects.bulk_create( composition_manytomany_with_source_file, ignore_conflicts=True )
+        return Composition.source_files.through.objects.bulk_create( composition_manytomany_with_source_file, ignore_conflicts=True )
 
-    def scrape_multiple_input_data_from_analitic_composition(self, source_file, data_frame):
 
-        composition_list_from_analitic_composition_for_equipment = []
-        input_code_list_from_analitic_composition_for_equipment = []
-        input_description_list_from_analitic_composition_for_equipment = []
-        input_group_list_from_analitic_composition_for_equipment = []
-        input_quantity_list_from_analitic_composition_for_equipment = []
-        input_productive_use_list_from_analitic_composition_for_equipment = []
-        input_unit_list_from_analitic_composition_for_equipment = []
-        input_item_bulk_create_list_for_equipment = []
+class AllocationPreparer:
 
-        composition_list_from_analitic_composition_for_workman = []
-        input_code_list_from_analitic_composition_for_workman = []
-        input_description_list_from_analitic_composition_for_workman = []
-        input_group_list_from_analitic_composition_for_workman = []
-        input_quantity_list_from_analitic_composition_for_workman = []
-        input_unit_list_from_analitic_composition_for_workman = []
-        input_item_bulk_create_list_for_workman = []
+    def __init__(self, data_frame: pd.core.frame.DataFrame, source_file: SourceFile) -> None:
+        self.scrape_multiple_input_data_from_analitic_composition( data_frame=data_frame, source_file=source_file )
 
-        composition_list_from_analitic_composition_for_material = []
-        input_code_list_from_analitic_composition_for_material = []
-        input_description_list_from_analitic_composition_for_material = []
-        input_group_list_from_analitic_composition_for_material = []
-        input_quantity_list_from_analitic_composition_for_material = []
-        input_unit_list_from_analitic_composition_for_material = []
-        input_item_bulk_create_list_for_material = []
-
-        composition_list_from_analitic_composition_for_activity = []
-        input_code_list_from_analitic_composition_for_activity = []
-        input_description_list_from_analitic_composition_for_activity = []
-        input_group_list_from_analitic_composition_for_activity = []
-        input_quantity_list_from_analitic_composition_for_activity = []
-        input_unit_list_from_analitic_composition_for_activity = []
-        input_item_bulk_create_list_for_activity = []
-
-        composition_list_from_analitic_composition_for_transport = []
-        input_code_list_from_analitic_composition_for_transport = []
-        input_description_list_from_analitic_composition_for_transport = []
-        input_group_list_from_analitic_composition_for_transport = []
-        input_quantity_list_from_analitic_composition_for_transport = []
-        input_unit_list_from_analitic_composition_for_transport = []
-        input_proprietary_code_list_from_analitic_composition_for_transport = []
-        input_item_bulk_create_list_for_transport = []
-
-        collection_of_unit = self.get_collection_of_unit()
-
+    def scrape_multiple_input_data_from_analitic_composition(self, data_frame: pd.core.frame.DataFrame, source_file: SourceFile):
+        collection_of_unit = UnitPreparer.get_collection_of_unit()
         collection_of_code_and_description = {}
         items = GenericItem.objects.filter(source_files__data_base=source_file.data_base).prefetch_related('descriptions')
         for item in items:
@@ -275,297 +256,65 @@ class FileXlsxProcessor:
             for composition in item.compositions_list:
                 collection_of_composition[item.code] = composition
 
+        equipments = InputEquipmentPreparer()
+        workmen = InputWorkmanPreparer()
+        materials = InputMaterialPreparer()
+        auxiliary_activities = InputAuxiliaryActivityPreparer()
+        transports = InputTransportPreparer()
+
         for index, row in data_frame.iterrows():
             if row[df_production] == "Valores em reais (R$)":
-                try:
-                    composition = collection_of_composition[ row[df_code] ]
-                except:
-                    break
-
+                composition = collection_of_composition[ row[df_code] ]
             elif re.match( r'[EA]\d{4}', str( row[df_code] ) ):
-                try:
-                    composition_list_from_analitic_composition_for_equipment.append( composition )
-                    input_code_list_from_analitic_composition_for_equipment.append( collection_of_code_and_description[row[df_code]][0] )
-                    input_description_list_from_analitic_composition_for_equipment.append( collection_of_code_and_description[row[df_code]][1] )
-                    input_group_list_from_analitic_composition_for_equipment.append( EQUIPAMENTO )
-                    input_quantity_list_from_analitic_composition_for_equipment.append( row[df_quantity] )
-                    input_productive_use_list_from_analitic_composition_for_equipment.append( row[df_productive_use] )
-                    input_unit_list_from_analitic_composition_for_equipment.append( collection_of_unit["h"] )
-                except:
-                    break
-
+                equipments.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=EQUIPAMENTO, quantity=row[df_quantity], use=row[df_productive_use], unit=collection_of_unit["h"], file=source_file)
             elif re.match( r'[P]\d{4}', str( row[df_code] ) ):
-                try:
-                    composition_list_from_analitic_composition_for_workman.append( composition )
-                    input_code_list_from_analitic_composition_for_workman.append( collection_of_code_and_description[row[df_code]][0] )
-                    input_description_list_from_analitic_composition_for_workman.append( collection_of_code_and_description[row[df_code]][1] )
-                    input_group_list_from_analitic_composition_for_workman.append( MAODEOBRA )
-                    input_quantity_list_from_analitic_composition_for_workman.append( row[df_quantity] )
-                    input_unit_list_from_analitic_composition_for_workman.append( collection_of_unit["h"] )
-                except:
-                    break
-
+                workmen.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=MAODEOBRA, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], file=source_file)
             elif re.match( r'[M]\d{4}', str( row[df_code] ) ) and ( type( row[df_productive_use] ) == str ) and not( re.match( r'\d{7}', str( row[df_unproductive_use] ) ) ) and not( re.match( r'\d{7}', str( row[df_production] ) ) ) :
-                try:
-                    composition_list_from_analitic_composition_for_material.append( composition )
-                    input_code_list_from_analitic_composition_for_material.append( collection_of_code_and_description[row[df_code]][0] )
-                    input_description_list_from_analitic_composition_for_material.append( collection_of_code_and_description[row[df_code]][1] )
-                    input_group_list_from_analitic_composition_for_material.append( MATERIAL )
-                    input_quantity_list_from_analitic_composition_for_material.append( row[df_quantity] )
-                    input_unit_list_from_analitic_composition_for_material.append( collection_of_unit[row[df_productive_use]] )
-                except:
-                    break
-
+                materials.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=MATERIAL, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], file=source_file)
             elif re.match( r'\d{7}', str( row[df_code] ) ) and ( type( row[df_productive_use] ) == str ) and not( re.match( r'\d{7}', str( row[df_unproductive_use] ) ) ) and not( re.match( r'\d{7}', str( row[df_production] ) ) ) :
-                try:
-                    composition_list_from_analitic_composition_for_activity.append( composition )
-                    input_code_list_from_analitic_composition_for_activity.append( collection_of_code_and_description[row[df_code]][0] )
-                    input_description_list_from_analitic_composition_for_activity.append( collection_of_code_and_description[row[df_code]][1] )
-                    input_group_list_from_analitic_composition_for_activity.append( AUXILIAR )
-                    input_quantity_list_from_analitic_composition_for_activity.append( row[df_quantity] )
-                    input_unit_list_from_analitic_composition_for_activity.append( collection_of_unit[row[df_productive_use]] )
-                except:
-                    break
-
+                auxiliary_activities.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=AUXILIAR, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], file=source_file)
             elif re.match( r'\d{7}', str( row[df_quantity] ) ):
-                try:
-                    composition_list_from_analitic_composition_for_transport.append( composition )
-                    input_code_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_quantity]][0] )
-                    input_description_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_quantity]][1] )
-                    input_group_list_from_analitic_composition_for_transport.append( TEMPO_FIXO )
-                    input_quantity_list_from_analitic_composition_for_transport.append( row[df_productive_use] )
-                    input_unit_list_from_analitic_composition_for_transport.append( collection_of_unit[row[df_unproductive_use]] )
-                    input_proprietary_code_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_code]][0] )
-                except:
-                    break
-                
+                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_quantity]][0], description=collection_of_code_and_description[row[df_quantity]][1], group=TEMPO_FIXO, quantity=row[df_productive_use], unit=collection_of_unit[row[df_unproductive_use]], proprietary=collection_of_code_and_description[row[df_code]][0], file=source_file)
             elif re.match( r'\d{7}', str( row[df_unproductive_use] ) ) and re.match( r'\d{7}', str( row[df_productive_cost] ) ) and re.match( r'\d{7}', str( row[df_unproductive_cost] ) ):
-                try:
-                    # first mean of transportation
-                    composition_list_from_analitic_composition_for_transport.append( composition )
-                    input_code_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_unproductive_use]][0] )
-                    input_description_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_unproductive_use]][1] )
-                    input_group_list_from_analitic_composition_for_transport.append( LEITO_NATURAL )
-                    input_quantity_list_from_analitic_composition_for_transport.append( row[df_quantity] )
-                    input_unit_list_from_analitic_composition_for_transport.append( collection_of_unit[row[df_productive_use]] )
-                    input_proprietary_code_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_code]][0] )
-                    # second mean of transportation
-                    composition_list_from_analitic_composition_for_transport.append( composition )
-                    input_code_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_productive_cost]][0] )
-                    input_description_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_productive_cost]][1] )
-                    input_group_list_from_analitic_composition_for_transport.append( REVESTIMENTO_PRIMARIO )
-                    input_quantity_list_from_analitic_composition_for_transport.append( row[df_quantity] )
-                    input_unit_list_from_analitic_composition_for_transport.append( collection_of_unit[row[df_productive_use]] )
-                    input_proprietary_code_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_code]][0] )
-                    # third mean of transportation
-                    composition_list_from_analitic_composition_for_transport.append( composition )
-                    input_code_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_unproductive_cost]][0] )
-                    input_description_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_unproductive_cost]][1] )
-                    input_group_list_from_analitic_composition_for_transport.append( PAVIMENTADO )
-                    input_quantity_list_from_analitic_composition_for_transport.append( row[df_quantity] )
-                    input_unit_list_from_analitic_composition_for_transport.append( collection_of_unit[row[df_productive_use]] )
-                    input_proprietary_code_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_code]][0] )
-                except:
-                    break
-                
+                # first mean of transportation
+                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_unproductive_use]][0], description=collection_of_code_and_description[row[df_unproductive_use]][1], group=LEITO_NATURAL, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0], file=source_file)
+                # second mean of transportation
+                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_productive_cost]][0], description=collection_of_code_and_description[row[df_productive_cost]][1], group=REVESTIMENTO_PRIMARIO, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0], file=source_file)
+                # third mean of transportation
+                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_unproductive_cost]][0], description=collection_of_code_and_description[row[df_unproductive_cost]][1], group=PAVIMENTADO, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0], file=source_file)
             elif re.match( r'\d{7}', str( row[df_production] ) ) and ( type( row[df_productive_use] ) == str ):
                 # fourth mean of transportation
-                try:
-                    composition_list_from_analitic_composition_for_transport.append( composition )
-                    input_code_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_production]][0] )
-                    input_description_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_production]][1] )
-                    input_group_list_from_analitic_composition_for_transport.append( FERROVIARIO )
-                    input_quantity_list_from_analitic_composition_for_transport.append( row[df_quantity] )
-                    input_unit_list_from_analitic_composition_for_transport.append( collection_of_unit[row[df_productive_use]] )
-                    input_proprietary_code_list_from_analitic_composition_for_transport.append( collection_of_code_and_description[row[df_code]][0] )
-                except:
-                    break
+                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_production]][0], description=collection_of_code_and_description[row[df_production]][1], group=FERROVIARIO, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0], file=source_file)
 
-        for index, code in enumerate(input_code_list_from_analitic_composition_for_equipment):
-            input_item_bulk_create_list_for_equipment.append( EquipmentItem(
-                composition = composition_list_from_analitic_composition_for_equipment[index],
-                generic_item = input_code_list_from_analitic_composition_for_equipment[index],
-                generic_description = input_description_list_from_analitic_composition_for_equipment[index],
-                input_group = input_group_list_from_analitic_composition_for_equipment[index],
-                input_quantity = input_quantity_list_from_analitic_composition_for_equipment[index],
-                input_use = input_productive_use_list_from_analitic_composition_for_equipment[index],
-                unit = input_unit_list_from_analitic_composition_for_equipment[index],
-                )
-            )
-        EquipmentItem.objects.bulk_create( input_item_bulk_create_list_for_equipment, ignore_conflicts=True )
+        equipments.create_instances()
+        workmen.create_instances()
+        materials.create_instances()
+        auxiliary_activities.create_instances()
+        transports.create_instances()
 
-        for index, code in enumerate(input_code_list_from_analitic_composition_for_workman):
-            input_item_bulk_create_list_for_workman.append( WorkmanItem(
-                composition = composition_list_from_analitic_composition_for_workman[index],
-                generic_item = input_code_list_from_analitic_composition_for_workman[index],
-                generic_description = input_description_list_from_analitic_composition_for_workman[index],
-                input_group = input_group_list_from_analitic_composition_for_workman[index],
-                input_quantity = input_quantity_list_from_analitic_composition_for_workman[index],
-                unit = input_unit_list_from_analitic_composition_for_workman[index],
-                )
-            )
-        WorkmanItem.objects.bulk_create( input_item_bulk_create_list_for_workman, ignore_conflicts=True )
 
-        for index, code in enumerate(input_code_list_from_analitic_composition_for_material):
-            input_item_bulk_create_list_for_material.append( MaterialItem(
-                composition = composition_list_from_analitic_composition_for_material[index],
-                generic_item = input_code_list_from_analitic_composition_for_material[index],
-                generic_description = input_description_list_from_analitic_composition_for_material[index],
-                input_group = input_group_list_from_analitic_composition_for_material[index],
-                input_quantity = input_quantity_list_from_analitic_composition_for_material[index],
-                unit = input_unit_list_from_analitic_composition_for_material[index],
-                )
-            )
-        MaterialItem.objects.bulk_create( input_item_bulk_create_list_for_material, ignore_conflicts=True )
+class FileXlsxProcessor:
 
-        for index, code in enumerate(input_code_list_from_analitic_composition_for_activity):
-            input_item_bulk_create_list_for_activity.append( AuxiliaryActivityItem(
-                composition = composition_list_from_analitic_composition_for_activity[index],
-                generic_item = input_code_list_from_analitic_composition_for_activity[index],
-                generic_description = input_description_list_from_analitic_composition_for_activity[index],
-                input_group = input_group_list_from_analitic_composition_for_activity[index],
-                input_quantity = input_quantity_list_from_analitic_composition_for_activity[index],
-                unit = input_unit_list_from_analitic_composition_for_activity[index],
-                )
-            )
-        AuxiliaryActivityItem.objects.bulk_create( input_item_bulk_create_list_for_activity, ignore_conflicts=True )
-        
-        reset_queries()
-        start_time = time.time()
-        for index, code in enumerate(input_code_list_from_analitic_composition_for_transport):
-            input_item_bulk_create_list_for_transport.append( TransportItem(
-                composition = composition_list_from_analitic_composition_for_transport[index],
-                generic_item = input_code_list_from_analitic_composition_for_transport[index],
-                generic_description = input_description_list_from_analitic_composition_for_transport[index],
-                input_group = input_group_list_from_analitic_composition_for_transport[index],
-                input_quantity = input_quantity_list_from_analitic_composition_for_transport[index],
-                unit = input_unit_list_from_analitic_composition_for_transport[index],
-                proprietary_item = input_proprietary_code_list_from_analitic_composition_for_transport[index],
-                )
-            )
-        TransportItem.objects.bulk_create( input_item_bulk_create_list_for_transport, ignore_conflicts=True )
-        end_time = time.time()
-        duration = (end_time - start_time)
-        print(f'Executou um total de {len(connection.queries)} queries')
-        print(f'Tempo de execução {round(duration, 3)} segundos')
-        reset_queries()
+    def __init__(self, data_frame: pd.core.frame.DataFrame, type_file: str, source_file: SourceFile) -> None:
+        self.process_source_file( data_frame=data_frame, type_file=type_file, source_file=source_file )
 
-    def get_collection_of_equipment_item(self, source_file):
-    ###### retorno de coleção de instâncias Composition
-        return EquipmentItem.objects.select_related('composition').filter(composition__source_files__data_base=source_file.data_base).in_bulk()
-
-    def relate_many_to_many_equipment_item_with_source_file(self, inputs, source_file):
-    ###### criação das instâncias de relacionamento manytomany entre EquipmentItem e SourceFile
-        input_item_manytomany_with_source_file = []
-        for input in inputs:
-            input_item_manytomany_with_source_file.append(EquipmentItem.source_files.through(
-                equipmentitem_id = input,
-                sourcefile_id = source_file.pk,
-                )
-            )
-        EquipmentItem.source_files.through.objects.bulk_create( input_item_manytomany_with_source_file, ignore_conflicts=True )
-
-    def get_collection_of_workman_item(self, source_file):
-    ###### retorno de coleção de instâncias Composition
-        return WorkmanItem.objects.select_related('composition').filter(composition__source_files__data_base=source_file.data_base).in_bulk()
-
-    def relate_many_to_many_workman_item_with_source_file(self, inputs, source_file):
-    ###### criação das instâncias de relacionamento manytomany entre WorkmanItem e SourceFile
-        input_item_manytomany_with_source_file = []
-        for input in inputs:
-            input_item_manytomany_with_source_file.append(WorkmanItem.source_files.through(
-                workmanitem_id = input,
-                sourcefile_id = source_file.pk,
-                )
-            )
-        WorkmanItem.source_files.through.objects.bulk_create( input_item_manytomany_with_source_file, ignore_conflicts=True )
-
-    def get_collection_of_material_item(self, source_file):
-    ###### retorno de coleção de instâncias Composition
-        return MaterialItem.objects.select_related('composition').filter(composition__source_files__data_base=source_file.data_base).in_bulk()
-
-    def relate_many_to_many_material_item_with_source_file(self, inputs, source_file):
-    ###### criação das instâncias de relacionamento manytomany entre MaterialItem e SourceFile
-        input_item_manytomany_with_source_file = []
-        for input in inputs:
-            input_item_manytomany_with_source_file.append(MaterialItem.source_files.through(
-                materialitem_id = input,
-                sourcefile_id = source_file.pk,
-                )
-            )
-        MaterialItem.source_files.through.objects.bulk_create( input_item_manytomany_with_source_file, ignore_conflicts=True )
-
-    def get_collection_of_activity_item(self, source_file):
-    ###### retorno de coleção de instâncias Composition
-        return AuxiliaryActivityItem.objects.select_related('composition').filter(composition__source_files__data_base=source_file.data_base).in_bulk()
-
-    def relate_many_to_many_activity_item_with_source_file(self, inputs, source_file):
-    ###### criação das instâncias de relacionamento manytomany entre AuxiliaryActivityItem e SourceFile
-        input_item_manytomany_with_source_file = []
-        for input in inputs:
-            input_item_manytomany_with_source_file.append(AuxiliaryActivityItem.source_files.through(
-                auxiliaryactivityitem_id = input,
-                sourcefile_id = source_file.pk,
-                )
-            )
-        AuxiliaryActivityItem.source_files.through.objects.bulk_create( input_item_manytomany_with_source_file, ignore_conflicts=True )
-
-    def get_collection_of_transport_item(self, source_file):
-    ###### retorno de coleção de instâncias Composition
-        return TransportItem.objects.select_related('composition').filter(composition__source_files__data_base=source_file.data_base).in_bulk()
-
-    def relate_many_to_many_transport_item_with_source_file(self, inputs, source_file):
-    ###### criação das instâncias de relacionamento manytomany entre TransportItem e SourceFile
-        input_item_manytomany_with_source_file = []
-        for input in inputs:
-            input_item_manytomany_with_source_file.append(TransportItem.source_files.through(
-                transportitem_id = input,
-                sourcefile_id = source_file.pk,
-                )
-            )
-        TransportItem.source_files.through.objects.bulk_create( input_item_manytomany_with_source_file, ignore_conflicts=True )
-
-    def process_source_file(self, type_file, response, source_file):
+    def process_source_file(self, data_frame: pd.core.frame.DataFrame, type_file, source_file: SourceFile ) -> None:
         
         if type_file == ANALITICO:
-
-            data_frame = self.get_prepared_data_frame(type_file, response, source_file)
-            self.scrape_multiple_basic_data_from_analitic_composition(source_file, data_frame)
-            compositions = self.get_collection_of_composition(source_file)
-            self.relate_many_to_many_composition_with_source_file(compositions, source_file)
-
-            self.scrape_multiple_input_data_from_analitic_composition(source_file, data_frame)
-
-            equipments = self.get_collection_of_equipment_item(source_file)
-            self.relate_many_to_many_equipment_item_with_source_file(equipments, source_file)
-
-            workmen = self.get_collection_of_workman_item(source_file)
-            self.relate_many_to_many_workman_item_with_source_file(workmen, source_file)
-
-            materials = self.get_collection_of_material_item(source_file)
-            self.relate_many_to_many_material_item_with_source_file(materials, source_file)
-
-            activities = self.get_collection_of_activity_item(source_file)
-            self.relate_many_to_many_activity_item_with_source_file(activities, source_file)
-
-            transports = self.get_collection_of_transport_item(source_file)
-            self.relate_many_to_many_transport_item_with_source_file(transports, source_file)
+            composition_preparer = BasicDataCompositionPreparer(data_frame=data_frame, source_file=source_file)
+            allocation_preparer = AllocationPreparer(data_frame=data_frame, source_file=source_file)
 
         else:
-            data_frame = self.get_prepared_data_frame(type_file, response, source_file)
-            self.get_or_create_instancies_of_unit(data_frame)
-            collection_of_unit = self.get_collection_of_unit()
-            self.create_instancies_of_generic_item(data_frame, type_file)
-            self.create_instancies_of_generic_description(data_frame, type_file)
-            collection_of_unrelated_items = self.get_collection_of_generic_item_unrelated()
-            collection_of_unrelated_descriptions = self.get_collection_of_generic_description_unrelated()
+            unit_preparer = UnitPreparer( data_frame=data_frame )
+            collection_of_unit = unit_preparer.get_collection_of_unit()
 
-            self.relate_many_to_many_generic_item_with_source_file(data_frame, collection_of_unrelated_items, source_file)
-            self.relate_many_to_many_generic_description_with_source_file(data_frame, collection_of_unrelated_descriptions, source_file)
+            item_preparer = GenericItemPreparer(data_frame=data_frame)
+            collection_of_unrelated_items = item_preparer.get_collection_of_generic_item_unrelated()
 
-            collection_of_related_items = self.get_collection_of_generic_item_related_with_source_file(df_code, source_file)
-            collection_of_related_descriptions = self.get_collection_of_generic_description_related_with_source_file(df_description, source_file)
-            self.switch_monetary_value(collection_of_related_items, data_frame, type_file, source_file, collection_of_unit)
+            description_preparer = GenericDescriptionPreparer(data_frame=data_frame, type_file=type_file)
+            collection_of_unrelated_descriptions = description_preparer.get_collection_of_generic_description_unrelated()
 
-            self.relate_many_to_many_generic_description_with_generic_item(data_frame, collection_of_related_items, collection_of_related_descriptions)
+            source_file_preparer = SourceFilePreparer(data_frame=data_frame, unrelated_items=collection_of_unrelated_items, unrelated_descriptions=collection_of_unrelated_descriptions, source_file=source_file)
+            collection_of_related_items = source_file_preparer.get_collection_of_generic_item_related_with_source_file(field=df_code, source_file=source_file)
 
+            monetary_preparer = MonetaryValuePreparer(data_frame=data_frame, type_file=type_file, source_file=source_file, related_items=collection_of_related_items, units=collection_of_unit)
