@@ -84,7 +84,7 @@ class Unit(models.Model):
         )
     dimensional = models.CharField(
         verbose_name="Dimensão",
-        max_length=10,
+        max_length=15,
         default=None,
         blank=True,
         null=True,

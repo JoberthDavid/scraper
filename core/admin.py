@@ -1,12 +1,15 @@
+from typing import Any
 from django.contrib import admin
 from django.db.models import QuerySet
 from django.http import HttpRequest
-from core.models import SourceFile, Composition, EquipmentItem, WorkmanItem, MaterialItem, AuxiliaryActivityItem, TransportItem, GenericItem, GenericDescription, MonetaryValue
+from core.models import SourceFile, Unit, Composition, EquipmentItem, WorkmanItem, MaterialItem, AuxiliaryActivityItem, TransportItem, GenericItem, GenericDescription, MonetaryValue
 
 from django.contrib import messages
 from django.utils.translation import ngettext
 
 from core.tasks import process_file_in_background
+
+from core.usefuls.choices import *
 
 
 admin.site.site_header = "SICRO"
@@ -55,7 +58,12 @@ class SourceFileAdmin(admin.ModelAdmin):
 
         except:
             self.warning_message_about_file_processing( request, queryset )
-            
+
+
+class UnitAdmin(admin.ModelAdmin):
+
+    order_by = ['unit',]
+    list_filter = ['dimensional',]
 
 class CompositionAdmin(admin.ModelAdmin):
 
@@ -65,28 +73,33 @@ class CompositionAdmin(admin.ModelAdmin):
 
 
 class EquipmentItemAdmin(admin.ModelAdmin):
-
-    search_fields = ['composition__source_file','generic_description__description',]
-
+    
+    search_fields = ['composition__generic_item__code', 'generic_description__description',]
+    list_filter = [ 'source_files', ]
+    
 
 class WorkmanItemAdmin(admin.ModelAdmin):
 
-    search_fields = ['composition__source_file','generic_description__description',]
+    search_fields = ['composition__generic_item__code', 'generic_description__description',]
+    list_filter = [ 'source_files', ]
 
 
 class MaterialItemAdmin(admin.ModelAdmin):
 
-    search_fields = ['composition__source_file','generic_description__description',]
+    search_fields = ['composition__generic_item__code', 'generic_description__description',]
+    list_filter = [ 'source_files', ]
 
 
 class AuxiliaryActivitytemAdmin(admin.ModelAdmin):
 
-    search_fields = ['composition__source_file','generic_description__description',]
+    search_fields = ['composition__generic_item__code', 'generic_description__description',]
+    list_filter = [ 'source_files', ]
 
 
 class TransportItemAdmin(admin.ModelAdmin):
 
-    search_fields = ['composition__source_file','generic_description__description',]
+    search_fields = ['composition__generic_item__code', 'generic_description__description', 'input_group']
+    list_filter = [ 'source_files', 'input_group']
 
 
 class GenericItemAdmin(admin.ModelAdmin):
@@ -108,15 +121,16 @@ class GenericDescriptionAdmin(admin.ModelAdmin):
 class MonetaryValueAdmin(admin.ModelAdmin):
 
     order_by = 'generic_item'
-    list_display = [ 'generic_item', 'monetary_value', 'unit']
+    list_display = [ 'generic_item', 'monetary_value', 'unit','type_system']
     search_fields = [ 'generic_item__code',]
-    list_filter = [ 'type_system', 'classification', 'source_file',]
+    list_filter = [ 'type_system', 'classification', 'source_file', 'unit__dimensional']
 
 
 admin.site.register(MonetaryValue, MonetaryValueAdmin)
 admin.site.register(GenericDescription, GenericDescriptionAdmin)
 admin.site.register(GenericItem, GenericItemAdmin)
 admin.site.register(SourceFile, SourceFileAdmin)
+admin.site.register(Unit, UnitAdmin)
 admin.site.register(Composition, CompositionAdmin)
 admin.site.register(EquipmentItem, EquipmentItemAdmin)
 admin.site.register(WorkmanItem, WorkmanItemAdmin)

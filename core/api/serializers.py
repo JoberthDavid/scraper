@@ -33,7 +33,7 @@ class UnitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Unit
-        fields = ['id', 'unit']
+        fields = ['id', 'unit', 'dimensional']
 
 
 class MonetaryValueSerializer(serializers.ModelSerializer):
@@ -104,7 +104,6 @@ class TransportItemSerializer(serializers.ModelSerializer):
 
 class CompositionSerializer(serializers.ModelSerializer):
 
-    source_files = SourceFileSerializer(many=True, read_only=True)
     generic_item = serializers.SlugRelatedField(read_only=True, slug_field='code')
     generic_description = serializers.StringRelatedField(read_only=True)
     unit = serializers.SlugRelatedField(read_only=True, slug_field='unit')
@@ -116,4 +115,4 @@ class CompositionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Composition
-        fields = ['source_files', 'id', 'composition_group', 'generic_item', 'generic_description', 'unit', 'fic', 'production', 'equipments', 'workmen', 'materials', 'activities', 'transports']
+        fields = [ 'id', 'composition_group', 'generic_item', 'generic_description', 'unit', 'fic', 'production', 'equipments', 'workmen', 'materials', 'activities', 'transports']
