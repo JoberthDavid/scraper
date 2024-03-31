@@ -26,11 +26,11 @@ class SourceFileViewSet(ModelViewSet):
         ]
     ordering_fields = ['data_base', 'type_system']
     ordering = ['data_base', 'type_system']
-    filterset_class = SourceFileFilter
-
-    def get_queryset(self):           
+    filterset_class = SourceFileFilter         
+        
+    def get_queryset(self):
         return SourceFile.objects.filter(status=True)
-    
+
 
 class GenericDescriptionViewSet(ModelViewSet):
 
@@ -96,8 +96,12 @@ class MonetaryValueViewSet(ModelViewSet):
     filterset_class = MonetaryValueFilter
     
     def get_queryset(self):           
-        return MonetaryValue.objects.all()
-    
+        data_base = self.request.GET.get('source_files__data_base')
+        if data_base:
+            return MonetaryValue.objects.filter(source_files__data_base=data_base)
+        else:
+            return MonetaryValue.objects.all()
+
 
 class CompositionViewSet(ModelViewSet):
 
@@ -112,5 +116,9 @@ class CompositionViewSet(ModelViewSet):
     ordering = ['composition_group',]
     filterset_class = CompositionFilter
 
-    def get_queryset(self):           
-        return Composition.objects.prefetch_related('source_files').all()
+    def get_queryset(self):
+        data_base = self.request.GET.get('source_files__data_base')
+        if data_base:
+            return Composition.objects.filter(source_files__data_base=data_base).prefetch_related('source_files')
+        else:
+            return Composition.objects.prefetch_related('source_files')
