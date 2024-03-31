@@ -57,7 +57,7 @@ class InputEquipmentPreparer:
         self.input_file_list = []
         self.bulk_create_list = []
 
-    def append_input(self, composition: Composition, code: GenericItem, description: GenericDescription, group: str, quantity: float, use: float, unit: Unit, file: SourceFile) -> None:
+    def append_input(self, composition: Composition, code: GenericItem, description: GenericDescription, group: str, quantity: float, use: float, unit: Unit) -> None:
         self.composition_list.append( composition )
         self.input_code_list.append( code )
         self.input_description_list.append( description )
@@ -65,7 +65,6 @@ class InputEquipmentPreparer:
         self.input_quantity_list.append( quantity )
         self.input_productive_use_list.append( use )
         self.input_unit_list.append( unit )
-        self.input_file_list.append( file )
 
     def get_bulk_create_list(self) -> list:
         for index, code in enumerate(self.input_code_list):
@@ -80,20 +79,25 @@ class InputEquipmentPreparer:
                 )
             )
         return EquipmentItem.objects.bulk_create( self.bulk_create_list, ignore_conflicts=True )
+
+    def get_collection_of_equipmentitem(self, source_file: SourceFile) -> dict:
+    ###### retorno de coleção de instâncias EquipmentItem
+        return EquipmentItem.objects.select_related('composition').filter(composition__source_files=source_file).in_bulk()
     
-    def relate_with_source_file(self, equipments) -> None:
+    def relate_with_source_file(self, equipments: dict, source_file: SourceFile) -> list:
         equipments_with_source_file = []
         for index, equipment in enumerate(equipments):
             equipments_with_source_file.append(EquipmentItem.source_files.through(
-                equipmentitem_id = equipment.pk,
-                sourcefile_id = self.input_file_list[index].pk,
+                equipmentitem_id = equipment,
+                sourcefile_id = source_file.pk,
                 )
             )
         return EquipmentItem.source_files.through.objects.bulk_create( equipments_with_source_file, ignore_conflicts=True )
 
-    def create_instances(self) -> None:
-        equipments = self.get_bulk_create_list()
-        self.relate_with_source_file(equipments)
+    def create_instances(self, source_file: SourceFile) -> None:
+        self.get_bulk_create_list()
+        equipments = self.get_collection_of_equipmentitem(source_file=source_file)
+        equipments_with_source_file = self.relate_with_source_file(equipments=equipments, source_file=source_file)
         
 
 class InputGenericPreparer:
@@ -108,18 +112,16 @@ class InputGenericPreparer:
         self.input_file_list = []
         self.bulk_create_list = []
 
-    def append_input(self, composition: Composition, code: GenericItem, description: GenericDescription, group: str, quantity: float, unit: Unit, file: SourceFile) -> None:
+    def append_input(self, composition: Composition, code: GenericItem, description: GenericDescription, group: str, quantity: float, unit: Unit) -> None:
         self.composition_list.append( composition )
         self.input_code_list.append( code )
         self.input_description_list.append( description )
         self.input_group_list.append( group )
         self.input_quantity_list.append( quantity )
         self.input_unit_list.append( unit )
-        self.input_file_list.append( file )
 
 
 class InputWorkmanPreparer(InputGenericPreparer):
-
 
     def get_bulk_create_list(self) -> list:
         for index, code in enumerate(self.input_code_list):
@@ -134,25 +136,28 @@ class InputWorkmanPreparer(InputGenericPreparer):
             )
         return WorkmanItem.objects.bulk_create( self.bulk_create_list, ignore_conflicts=True )
 
-
-    def relate_with_source_file(self, workmen) -> None:
+    def get_collection_of_workmanitem(self, source_file: SourceFile) -> dict:
+    ###### retorno de coleção de instâncias WorkmanItem
+        return WorkmanItem.objects.select_related('composition').filter(composition__source_files=source_file).in_bulk()
+    
+    def relate_with_source_file(self, workmen: dict, source_file: SourceFile) -> list:
         workmen_with_source_file = []
         for index, workman in enumerate(workmen):
             workmen_with_source_file.append(WorkmanItem.source_files.through(
-                workmanitem_id = workman.pk,
-                sourcefile_id = self.input_file_list[index].pk,
+                workmanitem_id = workman,
+                sourcefile_id = source_file.pk,
                 )
             )
         return WorkmanItem.source_files.through.objects.bulk_create( workmen_with_source_file, ignore_conflicts=True )
 
-    def create_instances(self) -> None:
-        workmen = self.get_bulk_create_list()
-        self.relate_with_source_file(workmen)
+    def create_instances(self, source_file: SourceFile) -> None:
+        self.get_bulk_create_list()
+        workmen = self.get_collection_of_workmanitem(source_file=source_file)
+        workmen_with_source_file = self.relate_with_source_file(workmen=workmen, source_file=source_file)
 
 
 class InputMaterialPreparer(InputGenericPreparer):
     
-
     def get_bulk_create_list(self) -> list:
         for index, code in enumerate(self.input_code_list):
             self.bulk_create_list.append( MaterialItem(
@@ -166,24 +171,28 @@ class InputMaterialPreparer(InputGenericPreparer):
             )
         return MaterialItem.objects.bulk_create( self.bulk_create_list, ignore_conflicts=True )
 
-    def relate_with_source_file(self, materials) -> None:
+    def get_collection_of_materialitem(self, source_file: SourceFile) -> dict:
+    ###### retorno de coleção de instâncias MaterialItem
+        return MaterialItem.objects.select_related('composition').filter(composition__source_files=source_file).in_bulk()
+    
+    def relate_with_source_file(self, materials: dict, source_file: SourceFile) -> list:
         materials_with_source_file = []
         for index, material in enumerate(materials):
             materials_with_source_file.append(MaterialItem.source_files.through(
-                materialitem_id = material.pk,
-                sourcefile_id = self.input_file_list[index].pk,
+                materialitem_id = material,
+                sourcefile_id = source_file.pk,
                 )
             )
         return MaterialItem.source_files.through.objects.bulk_create( materials_with_source_file, ignore_conflicts=True )
 
-    def create_instances(self) -> None:
-        materials = self.get_bulk_create_list()
-        self.relate_with_source_file(materials)
+    def create_instances(self, source_file: SourceFile) -> None:
+        self.get_bulk_create_list()
+        materials = self.get_collection_of_materialitem(source_file=source_file)
+        materials_with_source_file = self.relate_with_source_file(materials=materials, source_file=source_file)
 
 
 class InputAuxiliaryActivityPreparer(InputGenericPreparer):
     
-
     def get_bulk_create_list(self) -> list:
         for index, code in enumerate(self.input_code_list):
             self.bulk_create_list.append( AuxiliaryActivityItem(
@@ -197,19 +206,24 @@ class InputAuxiliaryActivityPreparer(InputGenericPreparer):
             )
         return AuxiliaryActivityItem.objects.bulk_create( self.bulk_create_list, ignore_conflicts=True )
 
-    def relate_with_source_file(self, auxiliaryactivities) -> None:
+    def get_collection_of_auxiliaryactivityitem(self, source_file: SourceFile) -> dict:
+    ###### retorno de coleção de instâncias AuxiliaryActivityItem
+        return AuxiliaryActivityItem.objects.select_related('composition').filter(composition__source_files=source_file).in_bulk()
+    
+    def relate_with_source_file(self, auxiliaryactivities: dict, source_file: SourceFile) -> list:
         auxiliaryactivities_with_source_file = []
         for index, auxiliaryactivity in enumerate(auxiliaryactivities):
             auxiliaryactivities_with_source_file.append(AuxiliaryActivityItem.source_files.through(
-                auxiliaryactivityitem_id = auxiliaryactivity.pk,
-                sourcefile_id = self.input_file_list[index].pk,
+                auxiliaryactivityitem_id = auxiliaryactivity,
+                sourcefile_id = source_file.pk,
                 )
             )
         return AuxiliaryActivityItem.source_files.through.objects.bulk_create( auxiliaryactivities_with_source_file, ignore_conflicts=True )
 
-    def create_instances(self) -> None:
-        auxiliaryactivities = self.get_bulk_create_list()
-        self.relate_with_source_file(auxiliaryactivities)
+    def create_instances(self, source_file: SourceFile) -> None:
+        self.get_bulk_create_list()
+        auxiliaryactivities = self.get_collection_of_auxiliaryactivityitem(source_file=source_file)
+        auxiliaryactivities_with_source_file = self.relate_with_source_file(auxiliaryactivities=auxiliaryactivities, source_file=source_file)
 
 
 class InputTransportPreparer(InputGenericPreparer):
@@ -225,7 +239,7 @@ class InputTransportPreparer(InputGenericPreparer):
         self.input_file_list = []
         self.bulk_create_list = []
 
-    def append_input(self, composition: Composition, code: GenericItem, description: GenericDescription, group: str, quantity: float, unit: Unit, proprietary: GenericItem, file: SourceFile) -> None:
+    def append_input(self, composition: Composition, code: GenericItem, description: GenericDescription, group: str, quantity: float, unit: Unit, proprietary: GenericItem) -> None:
         self.composition_list.append( composition )
         self.input_code_list.append( code )
         self.input_description_list.append( description )
@@ -233,7 +247,6 @@ class InputTransportPreparer(InputGenericPreparer):
         self.input_quantity_list.append( quantity )
         self.input_unit_list.append( unit )
         self.input_proprietary_list.append( proprietary )
-        self.input_file_list.append( file )
 
     def get_bulk_create_list(self) -> list:
         for index, code in enumerate(self.input_code_list):
@@ -249,16 +262,21 @@ class InputTransportPreparer(InputGenericPreparer):
             )
         return TransportItem.objects.bulk_create( self.bulk_create_list, ignore_conflicts=True )
 
-    def relate_with_source_file(self, transports) -> None:
+    def get_collection_of_transportitem(self, source_file: SourceFile) -> dict:
+    ###### retorno de coleção de instâncias TransportItem
+        return TransportItem.objects.select_related('composition').filter(composition__source_files=source_file).in_bulk()
+    
+    def relate_with_source_file(self, transports: dict, source_file: SourceFile) -> list:
         transports_with_source_file = []
         for index, transport in enumerate(transports):
             transports_with_source_file.append(TransportItem.source_files.through(
-                transportitem_id = transport.pk,
-                sourcefile_id = self.input_file_list[index].pk,
+                transportitem_id = transport,
+                sourcefile_id = source_file.pk,
                 )
             )
         return TransportItem.source_files.through.objects.bulk_create( transports_with_source_file, ignore_conflicts=True )
 
-    def create_instances(self) -> None:
-        transports = self.get_bulk_create_list()
-        self.relate_with_source_file(transports)
+    def create_instances(self, source_file: SourceFile) -> None:
+        self.get_bulk_create_list()
+        transports = self.get_collection_of_transportitem(source_file=source_file)
+        transports_with_source_file = self.relate_with_source_file(transports=transports, source_file=source_file)

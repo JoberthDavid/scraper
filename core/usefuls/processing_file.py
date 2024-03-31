@@ -1,6 +1,5 @@
 from decimal import Decimal
 import pandas as pd
-import numpy as np
 from sqlalchemy import create_engine
 
 from scraper.settings import default_dburl, DATABASES, dburl
@@ -11,9 +10,6 @@ from core.usefuls.choices import *
 import re
 
 from django.db.models import Prefetch
-
-from django.db import connection, reset_queries
-import time
 
 
 class FileXlsxPreparer:
@@ -266,31 +262,31 @@ class AllocationPreparer:
             if row[df_production] == "Valores em reais (R$)":
                 composition = collection_of_composition[ row[df_code] ]
             elif re.match( r'[EA]\d{4}', str( row[df_code] ) ):
-                equipments.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=EQUIPAMENTO, quantity=row[df_quantity], use=row[df_productive_use], unit=collection_of_unit["h"], file=source_file)
+                equipments.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=EQUIPAMENTO, quantity=row[df_quantity], use=row[df_productive_use], unit=collection_of_unit["h"])
             elif re.match( r'[P]\d{4}', str( row[df_code] ) ):
-                workmen.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=MAODEOBRA, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], file=source_file)
+                workmen.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=MAODEOBRA, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]])
             elif re.match( r'[M]\d{4}', str( row[df_code] ) ) and ( type( row[df_productive_use] ) == str ) and not( re.match( r'\d{7}', str( row[df_unproductive_use] ) ) ) and not( re.match( r'\d{7}', str( row[df_production] ) ) ) :
-                materials.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=MATERIAL, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], file=source_file)
+                materials.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=MATERIAL, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]])
             elif re.match( r'\d{7}', str( row[df_code] ) ) and ( type( row[df_productive_use] ) == str ) and not( re.match( r'\d{7}', str( row[df_unproductive_use] ) ) ) and not( re.match( r'\d{7}', str( row[df_production] ) ) ) :
-                auxiliary_activities.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=AUXILIAR, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], file=source_file)
+                auxiliary_activities.append_input(composition=composition, code=collection_of_code_and_description[row[df_code]][0], description=collection_of_code_and_description[row[df_code]][1], group=AUXILIAR, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]])
             elif re.match( r'\d{7}', str( row[df_quantity] ) ):
-                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_quantity]][0], description=collection_of_code_and_description[row[df_quantity]][1], group=TEMPO_FIXO, quantity=row[df_productive_use], unit=collection_of_unit[row[df_unproductive_use]], proprietary=collection_of_code_and_description[row[df_code]][0], file=source_file)
+                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_quantity]][0], description=collection_of_code_and_description[row[df_quantity]][1], group=TEMPO_FIXO, quantity=row[df_productive_use], unit=collection_of_unit[row[df_unproductive_use]], proprietary=collection_of_code_and_description[row[df_code]][0])
             elif re.match( r'\d{7}', str( row[df_unproductive_use] ) ) and re.match( r'\d{7}', str( row[df_productive_cost] ) ) and re.match( r'\d{7}', str( row[df_unproductive_cost] ) ):
                 # first mean of transportation
-                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_unproductive_use]][0], description=collection_of_code_and_description[row[df_unproductive_use]][1], group=LEITO_NATURAL, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0], file=source_file)
+                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_unproductive_use]][0], description=collection_of_code_and_description[row[df_unproductive_use]][1], group=LEITO_NATURAL, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0])
                 # second mean of transportation
-                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_productive_cost]][0], description=collection_of_code_and_description[row[df_productive_cost]][1], group=REVESTIMENTO_PRIMARIO, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0], file=source_file)
+                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_productive_cost]][0], description=collection_of_code_and_description[row[df_productive_cost]][1], group=REVESTIMENTO_PRIMARIO, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0])
                 # third mean of transportation
-                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_unproductive_cost]][0], description=collection_of_code_and_description[row[df_unproductive_cost]][1], group=PAVIMENTADO, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0], file=source_file)
+                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_unproductive_cost]][0], description=collection_of_code_and_description[row[df_unproductive_cost]][1], group=PAVIMENTADO, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0])
             elif re.match( r'\d{7}', str( row[df_production] ) ) and ( type( row[df_productive_use] ) == str ):
                 # fourth mean of transportation
-                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_production]][0], description=collection_of_code_and_description[row[df_production]][1], group=FERROVIARIO, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0], file=source_file)
+                transports.append_input(composition=composition, code=collection_of_code_and_description[row[df_production]][0], description=collection_of_code_and_description[row[df_production]][1], group=FERROVIARIO, quantity=row[df_quantity], unit=collection_of_unit[row[df_productive_use]], proprietary=collection_of_code_and_description[row[df_code]][0])
 
-        equipments.create_instances()
-        workmen.create_instances()
-        materials.create_instances()
-        auxiliary_activities.create_instances()
-        transports.create_instances()
+        equipments.create_instances(source_file=source_file)
+        workmen.create_instances(source_file=source_file)
+        materials.create_instances(source_file=source_file)
+        auxiliary_activities.create_instances(source_file=source_file)
+        transports.create_instances(source_file=source_file)
 
 
 class FileXlsxProcessor:
