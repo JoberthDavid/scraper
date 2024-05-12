@@ -19,15 +19,43 @@ class FileXlsxPreparer:
             data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_quantity, df_productive_use, df_unproductive_use, df_productive_cost, df_unproductive_cost, df_production, df_unit] )#, converters={df_code:str, df_description:str, df_quantity:str, df_productive_use:str, df_unproductive_use:str, df_productive_cost:str, df_unproductive_cost:str, df_production:str, df_unit:str} )
             data_frame[df_production].fillna(0.0, inplace=True)
         elif type_file == SINTETICO:
-            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_unit, df_monetary_value], converters={df_code:str, df_description:str, df_unit:str, df_monetary_value:float}, skiprows=source_file.number_of_lines_to_skip)        
+            dtype = {
+                df_code:'string',
+                df_description:'string',
+                df_unit:'string',
+                df_monetary_value:'float32'
+                }
+            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_unit, df_monetary_value], dtype=dtype, skiprows=source_file.number_of_lines_to_skip)
         elif type_file == EQUIPAMENTO:
-            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_purchase_value, df_deprecation, df_equity_opportunity, df_insurance_and_taxes, df_maintenance, df_operation, df_labor, df_productive_cost, df_unproductive_cost], converters={df_code:str, df_description:str, df_purchase_value:float, df_deprecation:float, df_equity_opportunity:float, df_insurance_and_taxes:float, df_maintenance:float, df_operation:float, df_labor:float, df_productive_cost:float, df_unproductive_cost:float}, skiprows=source_file.number_of_lines_to_skip).assign(unit="h")        
+            dtype = {
+                df_code:'string',
+                df_description:'string',
+                df_purchase_value:'float32',
+                df_deprecation:'float16',
+                df_equity_opportunity:'float16',
+                df_insurance_and_taxes:'float16',
+                df_maintenance:'float16',
+                df_operation:'float16',
+                df_labor:'float16',
+                df_productive_cost:'float16',
+                df_unproductive_cost:'float16'
+                }
+            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_purchase_value, df_deprecation, df_equity_opportunity, df_insurance_and_taxes, df_maintenance, df_operation, df_labor, df_productive_cost, df_unproductive_cost], dtype=dtype, skiprows=source_file.number_of_lines_to_skip).assign(unit="h")
         elif type_file == MAODEOBRA:
-            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_unit, df_wage, df_charges, df_monetary_value, df_unhealthy], converters={df_code:str, df_description:str, df_unit:str, df_wage:float, df_charges:float, df_monetary_value:float, df_unhealthy:float}, skiprows=source_file.number_of_lines_to_skip)
+            dtype= {
+                df_code:'string',
+                df_description:'string',
+                df_unit:'string',
+                df_wage: 'float16',
+                df_charges: 'float16',
+                df_monetary_value: 'float16',
+                df_unhealthy: 'float16',
+            }
+            data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_unit, df_wage, df_charges, df_monetary_value, df_unhealthy], dtype=dtype, skiprows=source_file.number_of_lines_to_skip)
         elif type_file == MATERIAL:
             data_frame = pd.read_excel(response[df_body].read(), names=[df_code, df_description, df_unit, df_monetary_value], converters={df_code:str, df_description:str, df_unit:str}, skiprows=source_file.number_of_lines_to_skip)
             data_frame[df_monetary_value].replace(['-'], [0.0], inplace=True)
-            data_frame[df_monetary_value] = data_frame[df_monetary_value].astype(float)
+            data_frame[df_monetary_value] = data_frame[df_monetary_value].astype('float32')
         return data_frame
 
 
@@ -41,7 +69,6 @@ class UnitPreparer:
         for index, row in data_frame.iterrows():
             object, created = Unit.objects.get_or_create(
                 unit=row[df_unit],
-                dimensional=None,
             )
 
     @classmethod
