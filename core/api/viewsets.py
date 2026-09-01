@@ -5,8 +5,9 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from rest_framework.viewsets import ModelViewSet
 from core.models import SourceFile, Composition, EquipmentItem, WorkmanItem, MaterialItem, AuxiliaryActivityItem, TransportItem, GenericItem, GenericDescription, Unit, MonetaryValue
-from core.api.serializers import SourceFileSerializer, GenericItemSerializer, GenericDescriptionSerializer, UnitSerializer, MonetaryValueSerializer, CompositionSerializer, EquipmentItemSerializer, WorkmanItemSerializer, MaterialItemSerializer, AuxiliaryActivityItemSerializer, TransportItemSerializer
+from core.api.serializers import SourceFileFullyDetailedSerializer, GenericItemSerializer, GenericDescriptionSerializer, UnitSerializer, MonetaryValueSerializer, CompositionSerializer, EquipmentItemSerializer, WorkmanItemSerializer, MaterialItemSerializer, AuxiliaryActivityItemSerializer, TransportItemSerializer
 from core.api.filters import SourceFileFilter, GenericItemFilter, GenericDescriptionFilter, MonetaryValueFilter, CompositionFilter
+from core.usefuls.choices import *
 
 
 class ReadOnly(BasePermission):
@@ -17,7 +18,7 @@ class ReadOnly(BasePermission):
 
 class SourceFileViewSet(ModelViewSet):
 
-    serializer_class = SourceFileSerializer
+    serializer_class = SourceFileFullyDetailedSerializer
     permission_classes = [ReadOnly]
     http_method_names = ['get', ]
     filter_backends = [
@@ -25,7 +26,7 @@ class SourceFileViewSet(ModelViewSet):
             DjangoFilterBackend,
         ]
     ordering_fields = ['data_base', 'type_system']
-    ordering = ['data_base', 'type_system']
+    ordering = ['data_base', 'type_file']
     filterset_class = SourceFileFilter         
         
     def get_queryset(self):
@@ -41,8 +42,8 @@ class GenericDescriptionViewSet(ModelViewSet):
             filters.OrderingFilter,
             DjangoFilterBackend,
         ]
-    ordering_fields = ['description']
-    ordering = ['description']
+    ordering_fields = ['group', 'code', 'description']
+    ordering = ['group', 'code', 'description']
     filterset_class = GenericDescriptionFilter
 
     def get_queryset(self):           
@@ -65,6 +66,74 @@ class GenericItemViewSet(ModelViewSet):
     def get_queryset(self):           
         return GenericItem.objects.prefetch_related('source_files').prefetch_related('descriptions').all()
 
+
+class CompositionItemViewSet(ModelViewSet):
+
+    serializer_class = GenericItemSerializer
+    permission_classes = [ReadOnly]
+    http_method_names = ['get', ]
+    filter_backends = [
+            filters.OrderingFilter,
+            DjangoFilterBackend,
+        ]
+    ordering_fields = ['descriptions__group', 'code']
+    ordering = ['descriptions__group', 'code']
+    filterset_class = GenericItemFilter
+
+    def get_queryset(self):           
+        return GenericItem.objects.prefetch_related('source_files').prefetch_related('descriptions').filter(descriptions__group=COMPOSICAO)
+
+
+class EquipmentItemViewSet(ModelViewSet):
+
+    serializer_class = GenericItemSerializer
+    permission_classes = [ReadOnly]
+    http_method_names = ['get', ]
+    filter_backends = [
+            filters.OrderingFilter,
+            DjangoFilterBackend,
+        ]
+    ordering_fields = ['descriptions__group', 'code']
+    ordering = ['descriptions__group', 'code']
+    filterset_class = GenericItemFilter
+
+    def get_queryset(self):           
+        return GenericItem.objects.prefetch_related('source_files').prefetch_related('descriptions').filter(descriptions__group=EQUIPAMENTO)
+
+
+class WorkmanItemViewSet(ModelViewSet):
+
+    serializer_class = GenericItemSerializer
+    permission_classes = [ReadOnly]
+    http_method_names = ['get', ]
+    filter_backends = [
+            filters.OrderingFilter,
+            DjangoFilterBackend,
+        ]
+    ordering_fields = ['descriptions__group', 'code']
+    ordering = ['descriptions__group', 'code']
+    filterset_class = GenericItemFilter
+
+    def get_queryset(self):           
+        return GenericItem.objects.prefetch_related('source_files').prefetch_related('descriptions').filter(descriptions__group=MAODEOBRA)
+
+
+class MaterialItemViewSet(ModelViewSet):
+
+    serializer_class = GenericItemSerializer
+    permission_classes = [ReadOnly]
+    http_method_names = ['get', ]
+    filter_backends = [
+            filters.OrderingFilter,
+            DjangoFilterBackend,
+        ]
+    ordering_fields = ['descriptions__group', 'code']
+    ordering = ['descriptions__group', 'code']
+    filterset_class = GenericItemFilter
+
+    def get_queryset(self):           
+        return GenericItem.objects.prefetch_related('source_files').prefetch_related('descriptions').filter(descriptions__group=MATERIAL)
+    
 
 class UnitViewSet(ModelViewSet):
 
@@ -95,13 +164,15 @@ class MonetaryValueViewSet(ModelViewSet):
     ordering = ['generic_item', 'unit']
     filterset_class = MonetaryValueFilter
     
-    def get_queryset(self):           
+    def get_queryset(self):
         data_base = self.request.GET.get('source_files__data_base')
-        if data_base:
-            return MonetaryValue.objects.filter(source_files__data_base=data_base)
-        else:
-            return MonetaryValue.objects.all()
 
+        if data_base:
+            return MonetaryValue.objects.filter(
+                source_file__data_base=data_base
+            )
+
+        return MonetaryValue.objects.all()
 
 class CompositionViewSet(ModelViewSet):
 

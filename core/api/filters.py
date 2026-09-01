@@ -18,17 +18,22 @@ class GenericItemFilter(django_filters.FilterSet):
 
     source_files = django_filters.DateFilter(lookup_expr='data_base__exact')
     code = django_filters.CharFilter(lookup_expr='startswith')
+    descriptions = django_filters.CharFilter(lookup_expr='description__startswith')
+    descriptions__group = django_filters.CharFilter(lookup_expr='startswith')
 
     class Meta:
         model = GenericItem
-        fields = ['source_files', 'code',]
+        fields = ['source_files', 'code', 'descriptions', 'descriptions__group']
 
 
 class GenericDescriptionFilter(django_filters.FilterSet):
 
     source_files = django_filters.DateFilter(lookup_expr='data_base__exact')
     group = django_filters.CharFilter(lookup_expr='startswith')
-    generic_item = django_filters.CharFilter(lookup_expr='code__startswith')
+    generic_item = django_filters.CharFilter(
+    field_name='generic_items__code',
+    lookup_expr='startswith',
+)
     description = django_filters.CharFilter(lookup_expr='startswith')
 
     class Meta:
@@ -38,24 +43,43 @@ class GenericDescriptionFilter(django_filters.FilterSet):
 
 class MonetaryValueFilter(django_filters.FilterSet):
 
-    source_file = django_filters.CharFilter(lookup_expr='startswith')
-    source_file = django_filters.DateFilter(lookup_expr='data_base__exact')
-    classification = django_filters.CharFilter(lookup_expr='startswith')
-    group = django_filters.CharFilter(lookup_expr='startswith')
-    generic_item = django_filters.CharFilter(lookup_expr='code__startswith')
-    unit = django_filters.CharFilter(lookup_expr='unit__startswith')
+    source_file = django_filters.DateFilter(
+        field_name='source_file__data_base',
+        lookup_expr='exact',
+    )
+    classification = django_filters.CharFilter(
+        lookup_expr='startswith',
+    )
+    group = django_filters.CharFilter(
+        lookup_expr='startswith',
+    )
+    generic_item = django_filters.CharFilter(
+        field_name='generic_item__code',
+        lookup_expr='startswith',
+    )
+    unit = django_filters.CharFilter(
+        field_name='unit__unit',
+        lookup_expr='startswith',
+    )
 
     class Meta:
         model = MonetaryValue
-        fields = ['type_system', 'source_file', 'classification', 'group', 'generic_item', 'unit']
-
+        fields = [
+            'type_system',
+            'source_file',
+            'classification',
+            'group',
+            'generic_item',
+            'unit',
+        ]
 
 class CompositionFilter(django_filters.FilterSet):
 
     class Meta:
         model = Composition
-        fields = { 'source_files__data_base':['exact'],
-                'composition_group':['startswith','in'],
-                'generic_item__code':['exact','in'],
-                'generic_description__description':['startswith'],
-                }    
+        fields = {
+            'source_files__data_base': ['exact'],
+            'composition_group': ['startswith', 'in'],
+            'generic_item__code': ['exact', 'in'],
+            'generic_description__description': ['startswith'],
+        }

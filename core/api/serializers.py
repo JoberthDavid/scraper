@@ -2,11 +2,18 @@ from rest_framework import serializers
 from core.models import SourceFile, Composition, EquipmentItem, WorkmanItem, MaterialItem, AuxiliaryActivityItem, TransportItem, GenericItem, GenericDescription, Unit, MonetaryValue
 
 
-class SourceFileSerializer(serializers.ModelSerializer):
+class SourceFileFullyDetailedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SourceFile
         fields = ['id', 'methodology',  'uf', 'data_base', 'source_file','type_system', 'type_file', 'status']
+
+
+class SourceFilePartiallyDetailedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SourceFile
+        fields = ['id', 'uf', 'data_base']
 
 
 class GenericDescriptionSerializer(serializers.ModelSerializer):
@@ -38,6 +45,7 @@ class UnitSerializer(serializers.ModelSerializer):
 
 class MonetaryValueSerializer(serializers.ModelSerializer):
 
+    source_file = SourceFilePartiallyDetailedSerializer(read_only=True)
     generic_item = serializers.SlugRelatedField(read_only=True, slug_field='code')
     unit = serializers.SlugRelatedField(read_only=True, slug_field='unit')
 
