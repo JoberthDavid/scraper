@@ -1,8 +1,0 @@
-*.sqlite3
-__pycache__
-*.pyc
-.scraper
-.vscode
-*.pdf
-deploy_heroku.txt
-migrations
