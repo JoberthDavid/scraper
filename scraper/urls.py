@@ -19,14 +19,18 @@ from django.urls import path
 
 from django.conf.urls import include
 from rest_framework import routers
-from core.api.viewsets import SourceFileViewSet, GenericItemViewSet, UnitViewSet, MonetaryValueViewSet, CompositionViewSet
+from core.api.viewsets import SourceFileViewSet, GenericItemViewSet, CompositionItemViewSet, EquipmentItemViewSet, WorkmanItemViewSet, MaterialItemViewSet, UnitViewSet, MonetaryValueViewSet, CompositionViewSet
 
 
 router = routers.DefaultRouter()
 router.register(r'arquivos-base', SourceFileViewSet, basename='SourceFile')
 router.register(r'itens', GenericItemViewSet, basename='GenericItem')
+router.register(r'itens-composicoes', CompositionItemViewSet, basename='CompositionItem')
+router.register(r'itens-equipamentos', EquipmentItemViewSet, basename='EquipmentItem')
+router.register(r'itens-mao-de-obra', WorkmanItemViewSet, basename='WorkmanItem')
+router.register(r'itens-materiais', MaterialItemViewSet, basename='MaterialItem')
 router.register(r'unidades', UnitViewSet, basename='Unit')
-router.register(r'valores', MonetaryValueViewSet, basename='MonetaryValue')
+router.register(r'valores-monetarios', MonetaryValueViewSet, basename='MonetaryValue')
 router.register(r'composicoes', CompositionViewSet, basename='Composition')
 
 urlpatterns = [
