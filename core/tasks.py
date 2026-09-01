@@ -9,7 +9,7 @@ import pandas as pd
 
 from io import BytesIO
 import boto3
-from scraper.settings import AWS_STORAGE_BUCKET_NAME
+from scraper.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
 
 
 logger = get_task_logger(__name__)
@@ -22,6 +22,7 @@ def extract_text_from_xlsx_file( response, type_file, source_file ) -> None:
     preparer = FileXlsxPreparer()
     data_frame = preparer.get_data_frame_prepared( response=response, type_file=type_file, source_file=source_file )
     processor = FileXlsxProcessor( data_frame=data_frame, type_file=type_file, source_file=source_file )
+    # print(data_frame)
 
 def save_status_file( selected_object: SourceFile ) -> bool:
     try:
@@ -37,9 +38,13 @@ def process_file_in_background( id: int ) -> bool:
     selected_object = SourceFile.objects.get(id=id)
     key_file = str(selected_object.source_file)
 
-    s3 = boto3.client("s3")
+    s3 = boto3.client("s3", region_name=AWS_S3_REGION_NAME,)
     response = s3.get_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=key_file)
     status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+
+    print(f"Bucket: {AWS_STORAGE_BUCKET_NAME}")
+    print(f"Region: {AWS_S3_REGION_NAME}")
+    print(f"Key: {key_file}")
 
     if status == 200:
         print(f"Successful S3 get_object response. Status - {status}")
