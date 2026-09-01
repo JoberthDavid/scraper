@@ -1,4 +1,75 @@
+# # Amazonas|Alagoas|Amapá|Bahia|Ceará|Distrito Federal|Espírito Santo|Goiás|Maranhão|Mato Grosso|Mato Grosso do Sul|Minas Gerais|Pará|Paraíba|Paraná|Pernambuco|Piauí|Rio de Janeiro|Rio Grande do Norte|Rio Grande do Sul|Rondônia|Roraima|Santa Catarina|São Paulo|Sergipe|Tocantins
+# FIRST_ROW_REGEX = 'FIRSTROWREGEX'
+# FIC_REGEX = 'FICREGEX'
+# DATA_BASE_REGEX = 'DBREGEX'
+# COMPOSITION_CODE_REGEX = 'COMPCODEREGEX'
+# PRODUCTION_REGEX = 'PRODUCTIONREGEX'
+# UNIT_REGEX = 'UNITREGEX'
+# EQUIPEMENT_CODE_REGEX = 'EQUIPCODEREGEX'
+# EQUIPEMENT_CODE_REGEX_BETA = 'EQUIPCODEREGEXBETA'
+# EQUIPEMENT_QUANT_REGEX = 'EQUIPQUANTREGEX'
+# EQUIPEMENT_QUANT_REGEX_ALFA = 'EQUIPQUANTREGEXALFA'
+# EQUIPEMENT_UTIL_REGEX = 'EQUIPUTILREGEX'
+# EQUIPEMENT_UTIL_REGEX_ALFA = 'EQUIPUTILREGEXALFA'
+# WORKMANSHIP_CODE_REGEX = 'WORKMANSHIPCODEREGEX'
+# WORKMANSHIP_QUANT_REGEX = 'WORKMANSHIPQUANTEREGEX'
+# BREAK_REGEX = 'BREAKREGEX'
+# LAST_REGEX = 'LASTREGEX'
+# LAST_HEADER_REGEX = 'LASTHEADERREGEX'
+# MATERIAL_CODE_REGEX = 'MATCODEREGEX'
+# MATERIAL_QUANT_REGEX = 'MATQUANTREGEX'
+# MATERIAL_QUANT_REGEX_ALFA = 'MATQUANTREGEXALFA'
+# MATERIAL_CODE_REGEX_BETA = 'MATCODEREGEXBETA'
+# FIXED_UNIT_REGEX = 'FIXEDUNITREGEX'
+# FIXED_CODE_REGEX = 'FIXEDCODEREGEX'
+# FIXED_MATERIAL_CODE_REGEX = 'FIXEDMATCODEREGEX'
+# FIXED_MATERIAL_QUANT_REGEX = 'FIXEDMATQUANTREGEX'
+# ACTIVITIES_CODE_REGEX = 'ACTIVITIESCODEREGEX'
+# ACTIVITIES_QUANT_REGEX = 'ACTIQUANTREGEX'
+# ACTIVITIES_QUANT_REGEX_ALFA = 'ACTIQUANTREGEXALFA'
+# ACTIVITIES_CODE_REGEX_BETA = 'ACTIVITIESCODEREGEXBETA'
+# TRANSPORTATION_UNIT_REGEX = 'TRANSPUNITREGEX'
+# TRANSPORTATION_PV_CODE_REGEX = 'TRANSPPVCODEREGEX'
+# TRANSPORTATION_LN_CODE_REGEX = 'TRANSPLNCODEREGEX'
+# TRANSPORTATION_RP_CODE_REGEX = 'TRANSPRPCODEREGEX'
+# TRANSPORTATION_FV_CODE_REGEX = 'TRANSPFVCODEREGEX'
+# TRANSPORTATION_FE_CODE_REGEX_ALFA = 'TRANSPFECODEREGEXALFA'
+# TRANSPORTATION_MATERIAL_CODE_REGEX_ALFA = 'TRANSPMATCODEREGEXALFA'
+# TRANSPORTATION_MATERIAL_QUANT_REGEX_ALFA = 'TRANSPMATQUANTREGEXALFA'
+# TRANSPORTATION_MATERIAL_CODE_REGEX = 'TRANSPMATCODEREGEX'
+# TRANSPORTATION_MATERIAL_QUANT_REGEX = 'TRANSPMATQUANTREGEX'
+# GENERAL_INPUT_QUANT_REGEX = 'INPUTQUANTREGEX'
+# GENERAL_INPUT_CODE_REGEX = 'INPUTCODEREGEX'
+# GENERAL_INPUT_QUANT_REGEX_ALFA = 'INPUTQUANTREGEXALFA'
+# GENERAL_INPUT_CODE_REGEX_BETA = 'INPUTCODEREGEXBETA'
+# FIRST_ROW_PATTERN = r'(?P<FIRSTROWREGEX> (\s*) Valores em reais \(R\$\)Custo Unitário de Referência Produção da equipe)'
+# SECOND_ROW_PATTERN = r'(.+) (SISTEMA DE CUSTOS REFERENCIAIS DE OBRAS - SICRO FIC (?P<FICREGEX>\d{1,3}(\.\d{3})*,\d{5})CGCIT DNIT)'
+# THIRD_ROW_PATTERN = r'(?P<DBREGEX>Janeiro\/\d{4}|Fevereiro\/\d{4}|Março\/\d{4}|Abril\/\d{4}|Maio\/\d{4}|Junho\/\d{4}|Julho\/\d{4}|Agosto\/\d{4}|Setembro\/\d{4}|Outubro\/\d{4}|Novembro\/\d{4}|Dezembro\/\d{4})(\s{0,2})(?P<PRODUCTIONREGEX>\d{1,3}(\.\d{3})*,\d{2,5})(\s{0,2})(?P<UNITREGEX>.+)'
+# THIRD_ROW_PATTERN_BETA = r'(.*)(?P<DBREGEX>Janeiro\/\d{4}|Fevereiro\/\d{4}|Março\/\d{4}|Abril\/\d{4}|Maio\/\d{4}|Junho\/\d{4}|Julho\/\d{4}|Agosto\/\d{4}|Setembro\/\d{4}|Outubro\/\d{4}|Novembro\/\d{4}|Dezembro\/\d{4})(\s{0,2})(Produçãodaequipe*)(\s{0,2})(?P<PRODUCTIONREGEX>\d{1,3}(\.\d{3})*,\d{2,5})(\s{0,2})(?P<UNITREGEX>.+)'
+# FOURTH_ROW_PATTERN = r'(?P<COMPCODEREGEX>\d{7})'
+# EQUIPEMENT_PATTERN = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d+\,\d{2})(\s{1,2})(?P<EQUIPUTILREGEX>\d+\,\d{2})(\s{1,2})(?P<EQUIPQUANTREGEX>\d+\,\d{5})(\s{1,2})(.+)(\s{1,2})(?P<EQUIPCODEREGEX>[EA]\d{4})$'
+# EQUIPEMENT_PATTERN_ALFA = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d+\,\d{2})(\s{1,2})(?P<EQUIPUTILREGEXALFA>\d+\,\d{2})(\s{1,2})(?P<EQUIPQUANTREGEXALFA>\d+\,\d{5})(\s{1,2})(.+)'
+# EQUIPEMENT_PATTERN_BETA = r'(.+)(\s{0,2})(?P<EQUIPCODEREGEXBETA>[EA]\d{4})'
+# WORKMANSHIP_PATTERN = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(h|mês)(\s{1,2})(?P<WORKMANSHIPQUANTEREGEX>\d+\,\d{5})(\s{1,2})(\w+)(\s{1,2})(?P<WORKMANSHIPCODEREGEX>[P]\d{4})$'
+# MATERIAL_PATTERN = r'^(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(.+)(\s{1,2})(?P<MATQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)(\s{1,2})(?P<MATCODEREGEX>[M]\d{4})$'
+# MATERIAL_PATTERN_ALFA = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(.+)(\s{1,2})(?P<MATQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)'
+# MATERIAL_PATTERN_BETA = r'(.+)(\s{0,2})(?P<MATCODEREGEXBETA>[M]\d{4})$'
+# FIXED_TIME_PATTERN = r'^(?P<FIXEDUNITREGEX>t\s{1,2})(?P<FIXEDMATQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(?P<FIXEDCODEREGEX>\d{7})(\s{1,2})(?P<FIXEDMATCODEREGEX>[M]\d{4}|\d{7})(\s{1,2})(.+)$'
+# TRANSPORTATION_PATTERN = r'^(.+)(\s{0,2})(?P<TRANSPMATQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})(\s{0,2})(?P<TRANSPUNITREGEX>tkm)(\s{0,2})(?P<TRANSPLNCODEREGEX>\d{7})(\s{1,2})(?P<TRANSPRPCODEREGEX>\d{7})(\s{1,2})(?P<TRANSPPVCODEREGEX>\d{7})(\s{1,2})(?P<TRANSPMATCODEREGEX>[M]\d{4}|\d{7})$'
+# TRANSPORTATION_PATTERN_ALFA = r'(.+)(\s{0,2})(?P<TRANSPMATQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})(\s{0,2})(?P<TRANSPUNITREGEXALFA>tkm)(\s{0,2})(?P<TRANSPFECODEREGEXALFA>\d{7})(\s{1,2})(?P<TRANSPMATCODEREGEX>[M]\d{4}|\d{7})$'
+# ACTIVITIES_PATTERN = r'^(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{0,2})(?P<ACTIUNITREGEX>kg|t|m|un|.+)(\s{0,2})(?P<ACTIQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)(\s{0,2})(?P<ACTIVITIESCODEREGEX>\d{7})$'
+# ACTIVITIES_PATTERN_ALFA = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{0,2})(.+)(\s{0,2})(?P<ACTIQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)'
+# ACTIVITIES_PATTERN_BETA = r'(.+)(\s{0,2})(?P<ACTIVITIESCODEREGEXBETA>\d{7})$'
+# BREAK_PATTERN = r'^(?P<BREAKREGEX>Custo horário total de mão de obra) (.*)'
+# LAST_PATTERN = r'(?P<LASTREGEX>Obs:) (.*)'
+# LAST_HEADER_PATTERN = r'^(?P<LASTHEADERREGEX>Quantidade A - EQUIPAMENTOS)'
+# GENERAL_INPUT_PATTERN = r'^(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(.+)(\s{1,2})(?P<INPUTQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)(\s{1,2})(?P<INPUTCODEREGEX>[P]\d{4}|[M]\d{4}|\d{7})$'
+# GENERAL_INPUT_PATTERN_ALFA = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(.+)(\s{1,2})(?P<INPUTQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)'
+# GENERAL_INPUT_PATTERN_BETA = r'(.+)(\s{0,2})(?P<INPUTCODEREGEXBETA>[P]\d{4}|[M]\d{4}|\d{7})$'
+
+
 # Amazonas|Alagoas|Amapá|Bahia|Ceará|Distrito Federal|Espírito Santo|Goiás|Maranhão|Mato Grosso|Mato Grosso do Sul|Minas Gerais|Pará|Paraíba|Paraná|Pernambuco|Piauí|Rio de Janeiro|Rio Grande do Norte|Rio Grande do Sul|Rondônia|Roraima|Santa Catarina|São Paulo|Sergipe|Tocantins
+
 FIRST_ROW_REGEX = 'FIRSTROWREGEX'
 FIC_REGEX = 'FICREGEX'
 DATA_BASE_REGEX = 'DBREGEX'
@@ -42,27 +113,320 @@ GENERAL_INPUT_QUANT_REGEX = 'INPUTQUANTREGEX'
 GENERAL_INPUT_CODE_REGEX = 'INPUTCODEREGEX'
 GENERAL_INPUT_QUANT_REGEX_ALFA = 'INPUTQUANTREGEXALFA'
 GENERAL_INPUT_CODE_REGEX_BETA = 'INPUTCODEREGEXBETA'
-FIRST_ROW_PATTERN = r'(?P<FIRSTROWREGEX> (\s*) Valores em reais \(R\$\)Custo Unitário de Referência Produção da equipe)'
-SECOND_ROW_PATTERN = r'(.+) (SISTEMA DE CUSTOS REFERENCIAIS DE OBRAS - SICRO FIC (?P<FICREGEX>\d{1,3}(\.\d{3})*,\d{5})CGCIT DNIT)'
-THIRD_ROW_PATTERN = r'(?P<DBREGEX>Janeiro\/\d{4}|Fevereiro\/\d{4}|Março\/\d{4}|Abril\/\d{4}|Maio\/\d{4}|Junho\/\d{4}|Julho\/\d{4}|Agosto\/\d{4}|Setembro\/\d{4}|Outubro\/\d{4}|Novembro\/\d{4}|Dezembro\/\d{4})(\s{0,2})(?P<PRODUCTIONREGEX>\d{1,3}(\.\d{3})*,\d{2,5})(\s{0,2})(?P<UNITREGEX>.+)'
-THIRD_ROW_PATTERN_BETA = r'(.*)(?P<DBREGEX>Janeiro\/\d{4}|Fevereiro\/\d{4}|Março\/\d{4}|Abril\/\d{4}|Maio\/\d{4}|Junho\/\d{4}|Julho\/\d{4}|Agosto\/\d{4}|Setembro\/\d{4}|Outubro\/\d{4}|Novembro\/\d{4}|Dezembro\/\d{4})(\s{0,2})(Produçãodaequipe*)(\s{0,2})(?P<PRODUCTIONREGEX>\d{1,3}(\.\d{3})*,\d{2,5})(\s{0,2})(?P<UNITREGEX>.+)'
+
+
+# ============================================================================
+# CABEÇALHO
+# ============================================================================
+
+FIRST_ROW_PATTERN = (
+    r'(?P<FIRSTROWREGEX>'
+    r'\s*Valores em reais \(R\$\)'
+    r'\s*Custo Unitário de Referência'
+    r'\s*Produção da equipe'
+    r')'
+)
+
+SECOND_ROW_PATTERN = (
+    r'\s*SISTEMA DE CUSTOS REFERENCIAIS DE OBRAS - SICRO'
+    r'\s*FIC\s*'
+    r'(?P<FICREGEX>\d{1,3}(\.\d{3})*,\d{5})'
+    r'\s*CGCIT DNIT'
+)
+
+THIRD_ROW_PATTERN = (
+    r'(?P<DBREGEX>'
+    r'Janeiro\/\d{4}|Fevereiro\/\d{4}|Março\/\d{4}|Abril\/\d{4}|'
+    r'Maio\/\d{4}|Junho\/\d{4}|Julho\/\d{4}|Agosto\/\d{4}|'
+    r'Setembro\/\d{4}|Outubro\/\d{4}|Novembro\/\d{4}|Dezembro\/\d{4}'
+    r')'
+    r'(\s{0,2})'
+    r'(?P<PRODUCTIONREGEX>\d{1,3}(\.\d{3})*,\d{2,5})'
+    r'(\s{0,2})'
+    r'(?P<UNITREGEX>.+)'
+)
+
+THIRD_ROW_PATTERN_BETA = (
+    r'(.*)'
+    r'(?P<DBREGEX>'
+    r'Janeiro\/\d{4}|Fevereiro\/\d{4}|Março\/\d{4}|Abril\/\d{4}|'
+    r'Maio\/\d{4}|Junho\/\d{4}|Julho\/\d{4}|Agosto\/\d{4}|'
+    r'Setembro\/\d{4}|Outubro\/\d{4}|Novembro\/\d{4}|Dezembro\/\d{4}'
+    r')'
+    r'(\s{0,2})'
+    r'(Produçãodaequipe*)'
+    r'(\s{0,2})'
+    r'(?P<PRODUCTIONREGEX>\d{1,3}(\.\d{3})*,\d{2,5})'
+    r'(\s{0,2})'
+    r'(?P<UNITREGEX>.+)'
+)
+
 FOURTH_ROW_PATTERN = r'(?P<COMPCODEREGEX>\d{7})'
-EQUIPEMENT_PATTERN = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d+\,\d{2})(\s{1,2})(?P<EQUIPUTILREGEX>\d+\,\d{2})(\s{1,2})(?P<EQUIPQUANTREGEX>\d+\,\d{5})(\s{1,2})(.+)(\s{1,2})(?P<EQUIPCODEREGEX>[EA]\d{4})$'
-EQUIPEMENT_PATTERN_ALFA = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d+\,\d{2})(\s{1,2})(?P<EQUIPUTILREGEXALFA>\d+\,\d{2})(\s{1,2})(?P<EQUIPQUANTREGEXALFA>\d+\,\d{5})(\s{1,2})(.+)'
-EQUIPEMENT_PATTERN_BETA = r'(.+)(\s{0,2})(?P<EQUIPCODEREGEXBETA>[EA]\d{4})'
-WORKMANSHIP_PATTERN = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(h|mês)(\s{1,2})(?P<WORKMANSHIPQUANTEREGEX>\d+\,\d{5})(\s{1,2})(\w+)(\s{1,2})(?P<WORKMANSHIPCODEREGEX>[P]\d{4})$'
-MATERIAL_PATTERN = r'^(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(.+)(\s{1,2})(?P<MATQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)(\s{1,2})(?P<MATCODEREGEX>[M]\d{4})$'
-MATERIAL_PATTERN_ALFA = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(.+)(\s{1,2})(?P<MATQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)'
-MATERIAL_PATTERN_BETA = r'(.+)(\s{0,2})(?P<MATCODEREGEXBETA>[M]\d{4})$'
-FIXED_TIME_PATTERN = r'^(?P<FIXEDUNITREGEX>t\s{1,2})(?P<FIXEDMATQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(?P<FIXEDCODEREGEX>\d{7})(\s{1,2})(?P<FIXEDMATCODEREGEX>[M]\d{4}|\d{7})(\s{1,2})(.+)$'
-TRANSPORTATION_PATTERN = r'^(.+)(\s{0,2})(?P<TRANSPMATQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})(\s{0,2})(?P<TRANSPUNITREGEX>tkm)(\s{0,2})(?P<TRANSPLNCODEREGEX>\d{7})(\s{1,2})(?P<TRANSPRPCODEREGEX>\d{7})(\s{1,2})(?P<TRANSPPVCODEREGEX>\d{7})(\s{1,2})(?P<TRANSPMATCODEREGEX>[M]\d{4}|\d{7})$'
-TRANSPORTATION_PATTERN_ALFA = r'(.+)(\s{0,2})(?P<TRANSPMATQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})(\s{0,2})(?P<TRANSPUNITREGEXALFA>tkm)(\s{0,2})(?P<TRANSPFECODEREGEXALFA>\d{7})(\s{1,2})(?P<TRANSPMATCODEREGEX>[M]\d{4}|\d{7})$'
-ACTIVITIES_PATTERN = r'^(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{0,2})(?P<ACTIUNITREGEX>kg|t|m|un|.+)(\s{0,2})(?P<ACTIQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)(\s{0,2})(?P<ACTIVITIESCODEREGEX>\d{7})$'
-ACTIVITIES_PATTERN_ALFA = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{0,2})(.+)(\s{0,2})(?P<ACTIQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)'
-ACTIVITIES_PATTERN_BETA = r'(.+)(\s{0,2})(?P<ACTIVITIESCODEREGEXBETA>\d{7})$'
-BREAK_PATTERN = r'^(?P<BREAKREGEX>Custo horário total de mão de obra) (.*)'
-LAST_PATTERN = r'(?P<LASTREGEX>Obs:) (.*)'
-LAST_HEADER_PATTERN = r'^(?P<LASTHEADERREGEX>Quantidade A - EQUIPAMENTOS)'
-GENERAL_INPUT_PATTERN = r'^(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(.+)(\s{1,2})(?P<INPUTQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)(\s{1,2})(?P<INPUTCODEREGEX>[P]\d{4}|[M]\d{4}|\d{7})$'
-GENERAL_INPUT_PATTERN_ALFA = r'(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(\d{1,3}(\.\d{3})*,\d{4})(\s{1,2})(.+)(\s{1,2})(?P<INPUTQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})(\s{1,2})(.+)'
-GENERAL_INPUT_PATTERN_BETA = r'(.+)(\s{0,2})(?P<INPUTCODEREGEXBETA>[P]\d{4}|[M]\d{4}|\d{7})$'
+
+
+# ============================================================================
+# EQUIPAMENTO
+# ============================================================================
+
+# Aceita:
+#
+#   100,0000
+#   1000,0000
+#   100000,0000
+#   1.000,0000
+#   100.000,0000
+#
+# mantendo o formato original com separador de milhares quando existente.
+
+EQUIPEMENT_NUMBER = r'(?:\d+(?:\.\d{3})*,\d{4})'
+
+EQUIPEMENT_PATTERN = (
+    rf'({EQUIPEMENT_NUMBER})'
+    r'(\s{1,2})'
+    rf'({EQUIPEMENT_NUMBER})'
+    r'(\s{1,2})'
+    rf'({EQUIPEMENT_NUMBER})'
+    r'(\s{1,2})'
+    r'(\d+\,\d{2})'
+    r'(\s{1,2})'
+    r'(?P<EQUIPUTILREGEX>\d+\,\d{2})'
+    r'(\s{1,2})'
+    r'(?P<EQUIPQUANTREGEX>\d+\,\d{5})'
+    r'(\s{1,2})'
+    r'(.+)'
+    r'(\s{1,2})'
+    r'(?P<EQUIPCODEREGEX>[EA]\d{4})$'
+)
+
+EQUIPEMENT_PATTERN_ALFA = (
+    rf'({EQUIPEMENT_NUMBER})'
+    r'(\s{1,2})'
+    rf'({EQUIPEMENT_NUMBER})'
+    r'(\s{1,2})'
+    rf'({EQUIPEMENT_NUMBER})'
+    r'(\s{1,2})'
+    r'(\d+\,\d{2})'
+    r'(\s{1,2})'
+    r'(?P<EQUIPUTILREGEXALFA>\d+\,\d{2})'
+    r'(\s{1,2})'
+    r'(?P<EQUIPQUANTREGEXALFA>\d+\,\d{5})'
+    r'(\s{1,2})'
+    r'(.+)'
+)
+
+EQUIPEMENT_PATTERN_BETA = (
+    r'(.+)'
+    r'(\s{0,2})'
+    r'(?P<EQUIPCODEREGEXBETA>[EA]\d{4})'
+)
+
+
+# ============================================================================
+# MÃO DE OBRA
+# ============================================================================
+
+WORKMANSHIP_PATTERN = (
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(h|mês)'
+    r'(\s{1,2})'
+    r'(?P<WORKMANSHIPQUANTEREGEX>\d+\,\d{5})'
+    r'(\s{1,2})'
+    r'(\w+)'
+    r'(\s{1,2})'
+    r'(?P<WORKMANSHIPCODEREGEX>[P]\d{4})$'
+)
+
+
+# ============================================================================
+# MATERIAL
+# ============================================================================
+
+MATERIAL_PATTERN = (
+    r'^'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(.+)'
+    r'(\s{1,2})'
+    r'(?P<MATQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})'
+    r'(\s{1,2})'
+    r'(.+)'
+    r'(\s{1,2})'
+    r'(?P<MATCODEREGEX>[M]\d{4})'
+    r'$'
+)
+
+MATERIAL_PATTERN_ALFA = (
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(.+)'
+    r'(\s{1,2})'
+    r'(?P<MATQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})'
+    r'(\s{1,2})'
+    r'(.+)'
+)
+
+MATERIAL_PATTERN_BETA = (
+    r'(.+)'
+    r'(\s{0,2})'
+    r'(?P<MATCODEREGEXBETA>[M]\d{4})$'
+)
+
+
+# ============================================================================
+# TEMPO FIXO
+# ============================================================================
+
+FIXED_TIME_PATTERN = (
+    r'^'
+    r'(?P<FIXEDUNITREGEX>t\s{1,2})'
+    r'(?P<FIXEDMATQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})'
+    r'(\s{1,2})'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(?P<FIXEDCODEREGEX>\d{7})'
+    r'(\s{1,2})'
+    r'(?P<FIXEDMATCODEREGEX>[M]\d{4}|\d{7})'
+    r'(\s{1,2})'
+    r'(.+)'
+    r'$'
+)
+
+
+# ============================================================================
+# TRANSPORTE
+# ============================================================================
+
+TRANSPORTATION_PATTERN = (
+    r'^'
+    r'(.+)'
+    r'(\s{0,2})'
+    r'(?P<TRANSPMATQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})'
+    r'(\s{0,2})'
+    r'(?P<TRANSPUNITREGEX>tkm)'
+    r'(\s{0,2})'
+    r'(?P<TRANSPLNCODEREGEX>\d{7})'
+    r'(\s{1,2})'
+    r'(?P<TRANSPRPCODEREGEX>\d{7})'
+    r'(\s{1,2})'
+    r'(?P<TRANSPPVCODEREGEX>\d{7})'
+    r'(\s{1,2})'
+    r'(?P<TRANSPMATCODEREGEX>[M]\d{4}|\d{7})'
+    r'$'
+)
+
+TRANSPORTATION_PATTERN_ALFA = (
+    r'(.+)'
+    r'(\s{0,2})'
+    r'(?P<TRANSPMATQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})'
+    r'(\s{0,2})'
+    r'(?P<TRANSPUNITREGEXALFA>tkm)'
+    r'(\s{0,2})'
+    r'(?P<TRANSPFECODEREGEXALFA>\d{7})'
+    r'(\s{1,2})'
+    r'(?P<TRANSPMATCODEREGEX>[M]\d{4}|\d{7})'
+    r'$'
+)
+
+
+# ============================================================================
+# ATIVIDADES AUXILIARES
+# ============================================================================
+
+ACTIVITIES_PATTERN = (
+    r'^'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{0,2})'
+    r'(?P<ACTIUNITREGEX>kg|t|m|un|.+)'
+    r'(\s{0,2})'
+    r'(?P<ACTIQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})'
+    r'(\s{1,2})'
+    r'(.+)'
+    r'(\s{0,2})'
+    r'(?P<ACTIVITIESCODEREGEX>\d{7})'
+    r'$'
+)
+
+ACTIVITIES_PATTERN_ALFA = (
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{0,2})'
+    r'(.+)'
+    r'(\s{0,2})'
+    r'(?P<ACTIQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})'
+    r'(\s{1,2})'
+    r'(.+)'
+)
+
+ACTIVITIES_PATTERN_BETA = (
+    r'(.+)'
+    r'(\s{0,2})'
+    r'(?P<ACTIVITIESCODEREGEXBETA>\d{7})$'
+)
+
+
+# ============================================================================
+# CONTROLE
+# ============================================================================
+
+BREAK_PATTERN = (
+    r'^(?P<BREAKREGEX>Custo horário total de mão de obra) (.*)'
+)
+
+LAST_PATTERN = (
+    r'(?P<LASTREGEX>Obs:) (.*)'
+)
+
+LAST_HEADER_PATTERN = (
+    r'^(?P<LASTHEADERREGEX>Quantidade A - EQUIPAMENTOS)'
+)
+
+
+# ============================================================================
+# ENTRADA GERAL
+# ============================================================================
+
+GENERAL_INPUT_PATTERN = (
+    r'^'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(.+)'
+    r'(\s{1,2})'
+    r'(?P<INPUTQUANTREGEX>\d{1,3}(\.\d{3})*,\d{5})'
+    r'(\s{1,2})'
+    r'(.+)'
+    r'(\s{1,2})'
+    r'(?P<INPUTCODEREGEX>[P]\d{4}|[M]\d{4}|\d{7})'
+    r'$'
+)
+
+GENERAL_INPUT_PATTERN_ALFA = (
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(\d{1,3}(\.\d{3})*,\d{4})'
+    r'(\s{1,2})'
+    r'(.+)'
+    r'(\s{1,2})'
+    r'(?P<INPUTQUANTREGEXALFA>\d{1,3}(\.\d{3})*,\d{5})'
+    r'(\s{1,2})'
+    r'(.+)'
+)
+
+GENERAL_INPUT_PATTERN_BETA = (
+    r'(.+)'
+    r'(\s{0,2})'
+    r'(?P<INPUTCODEREGEXBETA>[P]\d{4}|[M]\d{4}|\d{7})$'
+)
