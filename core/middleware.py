@@ -1,6 +1,4 @@
-import logging
-
-logger = logging.getLogger("django.request")
+import traceback
 
 
 class RequestDebugMiddleware:
@@ -8,33 +6,30 @@ class RequestDebugMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        logger.error(
+        print(
             "REQUEST DEBUG | "
-            "scheme=%s | "
-            "host=%s | "
-            "HTTP_HOST=%s | "
-            "X_FORWARDED_PROTO=%s | "
-            "X_FORWARDED_HOST=%s | "
-            "X_FORWARDED_PORT=%s | "
-            "REMOTE_ADDR=%s | "
-            "PATH=%s",
-            request.scheme,
-            request.get_host(),
-            request.META.get("HTTP_HOST"),
-            request.META.get("HTTP_X_FORWARDED_PROTO"),
-            request.META.get("HTTP_X_FORWARDED_HOST"),
-            request.META.get("HTTP_X_FORWARDED_PORT"),
-            request.META.get("REMOTE_ADDR"),
-            request.path,
+            f"scheme={request.scheme} | "
+            f"host={request.get_host()} | "
+            f"HTTP_HOST={request.META.get('HTTP_HOST')} | "
+            f"X_FORWARDED_PROTO={request.META.get('HTTP_X_FORWARDED_PROTO')} | "
+            f"X_FORWARDED_HOST={request.META.get('HTTP_X_FORWARDED_HOST')} | "
+            f"X_FORWARDED_PORT={request.META.get('HTTP_X_FORWARDED_PORT')} | "
+            f"REMOTE_ADDR={request.META.get('REMOTE_ADDR')} | "
+            f"PATH={request.path}",
+            flush=True,
         )
 
         try:
             response = self.get_response(request)
-            logger.error(
-                "REQUEST DEBUG | response_status=%s",
-                response.status_code,
+
+            print(
+                f"REQUEST DEBUG | response_status={response.status_code}",
+                flush=True,
             )
+
             return response
+
         except Exception:
-            logger.exception("REQUEST DEBUG | EXCEPTION")
+            print("REQUEST DEBUG | EXCEPTION", flush=True)
+            traceback.print_exc()
             raise
