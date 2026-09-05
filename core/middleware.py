@@ -27,6 +27,20 @@ class RequestDebugMiddleware:
                 flush=True,
             )
 
+            if response.status_code >= 500:
+                print(
+                    f"REQUEST DEBUG | response_class={response.__class__.__name__}",
+                    flush=True,
+                )
+                print(
+                    f"REQUEST DEBUG | content_type={response.get('Content-Type')}",
+                    flush=True,
+                )
+                print(
+                    f"REQUEST DEBUG | response_body={response.content[:5000]!r}",
+                    flush=True,
+                )
+
             return response
 
         except Exception:
