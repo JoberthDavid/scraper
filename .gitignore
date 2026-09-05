@@ -21,3 +21,7 @@ api-composicoes-s3_accessKeys.csv
 
 pytest.ini
 pytest.ini.save
+
+# Credenciais e arquivos locais
+*_accessKeys*.csv
+*.backup

@@ -9,7 +9,7 @@ import pandas as pd
 
 from io import BytesIO
 import boto3
-from scraper.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
+from django.conf import settings
 
 
 logger = get_task_logger(__name__)
@@ -38,12 +38,17 @@ def process_file_in_background( id: int ) -> bool:
     selected_object = SourceFile.objects.get(id=id)
     key_file = str(selected_object.source_file)
 
-    s3 = boto3.client("s3", region_name=AWS_S3_REGION_NAME,)
-    response = s3.get_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=key_file)
+    s3 = boto3.client(
+        "s3",
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_S3_REGION_NAME,
+    )
+    response = s3.get_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key_file)
     status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
 
-    print(f"Bucket: {AWS_STORAGE_BUCKET_NAME}")
-    print(f"Region: {AWS_S3_REGION_NAME}")
+    print(f"Bucket: {settings.AWS_STORAGE_BUCKET_NAME}")
+    print(f"Region: {settings.AWS_S3_REGION_NAME}")
     print(f"Key: {key_file}")
 
     if status == 200:

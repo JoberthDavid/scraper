@@ -49,15 +49,30 @@ class SourceFileAdmin(admin.ModelAdmin):
 
     @admin.action(description='Processar arquivo')
     def process_file(self, request: HttpRequest, queryset: QuerySet) -> None:
+        selected_object = self.select_object(queryset)
+
+        if selected_object is None:
+            self.message_user(
+                request,
+                "Nenhum arquivo pendente foi encontrado para processamento.",
+                messages.WARNING,
+            )
+            return
+
         try:
-            selected_object = self.select_object( queryset )
+            process_file_in_background.delay(selected_object.id)
 
-            process_file_in_background.delay( selected_object.id )
+            self.success_message_about_file_processing(
+                request,
+                queryset,
+            )
 
-            self.success_message_about_file_processing( request, queryset )
-
-        except:
-            self.warning_message_about_file_processing( request, queryset )
+        except Exception as error:
+            self.message_user(
+                request,
+                f"Erro ao enviar o arquivo para processamento: {error}",
+                messages.ERROR,
+            )
 
 
 class UnitAdmin(admin.ModelAdmin):
