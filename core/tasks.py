@@ -1,13 +1,10 @@
 from core.usefuls.processing_file import FileXlsxPreparer, FileXlsxProcessor
-from core.models import SourceFile, GenericItem
+from core.models import SourceFile
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
-from PyPDF2 import PdfReader
-import pandas as pd
 
-from io import BytesIO
 import boto3
 from django.conf import settings
 

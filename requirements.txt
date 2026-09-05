@@ -1,26 +1,35 @@
+# Django
 Django==4.2.16
 djangorestframework==3.15.2
 django-filter==24.3
 django-cors-headers==4.4.0
 
+# Celery e Redis
 celery==5.4.0
 redis==5.0.8
 
+# AWS / S3
 boto3==1.35.24
 django-storages==1.14.4
 
+# Banco de dados
 dj-database-url==2.2.0
+psycopg[binary]==3.2.1
+SQLAlchemy==2.0.36
+
+# Produção
 gunicorn==23.0.0
 whitenoise==6.7.0
 
-psycopg[binary]==3.2.1
-
+# Processamento de dados
 pandas==2.2.3
 numpy==2.1.1
+
+# Arquivos Excel
 openpyxl==3.1.5
 xlrd==2.0.1
 pyxlsb==1.0.10
 odfpy==1.4.1
 
-PyPDF2==3.0.1
+# Configuração
 python-decouple==3.8

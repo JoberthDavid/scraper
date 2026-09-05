@@ -25,3 +25,6 @@ pytest.ini.save
 # Credenciais e arquivos locais
 *_accessKeys*.csv
 *.backup
+
+# Logs
+*.log
