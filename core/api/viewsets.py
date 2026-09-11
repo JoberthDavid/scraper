@@ -9,6 +9,8 @@ from core.api.serializers import SourceFileFullyDetailedSerializer, GenericItemS
 from core.api.filters import SourceFileFilter, GenericItemFilter, GenericDescriptionFilter, MonetaryValueFilter, CompositionFilter
 from core.usefuls.choices import *
 
+from core.api.pagination import MonetaryValuePagination
+
 
 class ReadOnly(BasePermission):
 
@@ -150,12 +152,13 @@ class UnitViewSet(ModelViewSet):
     def get_queryset(self):           
         return Unit.objects.all()
 
-
 class MonetaryValueViewSet(ModelViewSet):
+
 
     serializer_class = MonetaryValueSerializer
     permission_classes = [ReadOnly]
     http_method_names = ['get', ]
+    pagination_class = MonetaryValuePagination
     filter_backends = [
             filters.OrderingFilter,
             DjangoFilterBackend,
@@ -163,7 +166,7 @@ class MonetaryValueViewSet(ModelViewSet):
     ordering_fields = ['generic_item', 'unit']
     ordering = ['generic_item', 'unit']
     filterset_class = MonetaryValueFilter
-    
+
     def get_queryset(self):
         data_base = self.request.GET.get('source_files__data_base')
 
@@ -173,6 +176,7 @@ class MonetaryValueViewSet(ModelViewSet):
             )
 
         return MonetaryValue.objects.all()
+
 
 class CompositionViewSet(ModelViewSet):
 
