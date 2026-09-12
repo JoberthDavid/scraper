@@ -9,9 +9,9 @@ from core.models import (
 )
 
 
-class CompositionCodeFilterMixin:
+class CompositionCodeFilterSet(django_filters.FilterSet):
     """
-    Adiciona filtros por código de composição e data-base.
+    Filtros comuns aos itens vinculados a uma composição.
     """
 
     composition_code = django_filters.CharFilter(
@@ -30,46 +30,31 @@ class CompositionCodeFilterMixin:
     )
 
 
-class EquipmentCalculationFilter(
-    CompositionCodeFilterMixin,
-    django_filters.FilterSet,
-):
+class EquipmentCalculationFilter(CompositionCodeFilterSet):
     class Meta:
         model = EquipmentItem
         fields = []
 
 
-class WorkmanCalculationFilter(
-    CompositionCodeFilterMixin,
-    django_filters.FilterSet,
-):
+class WorkmanCalculationFilter(CompositionCodeFilterSet):
     class Meta:
         model = WorkmanItem
         fields = []
 
 
-class MaterialCalculationFilter(
-    CompositionCodeFilterMixin,
-    django_filters.FilterSet,
-):
+class MaterialCalculationFilter(CompositionCodeFilterSet):
     class Meta:
         model = MaterialItem
         fields = []
 
 
-class ActivityCalculationFilter(
-    CompositionCodeFilterMixin,
-    django_filters.FilterSet,
-):
+class ActivityCalculationFilter(CompositionCodeFilterSet):
     class Meta:
         model = AuxiliaryActivityItem
         fields = []
 
 
-class TransportCalculationFilter(
-    CompositionCodeFilterMixin,
-    django_filters.FilterSet,
-):
+class TransportCalculationFilter(CompositionCodeFilterSet):
     class Meta:
         model = TransportItem
         fields = []
