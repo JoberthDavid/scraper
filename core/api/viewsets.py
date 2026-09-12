@@ -192,8 +192,41 @@ class CompositionViewSet(ModelViewSet):
     filterset_class = CompositionFilter
 
     def get_queryset(self):
-        data_base = self.request.GET.get('source_files__data_base')
+        data_base = self.request.GET.get(
+            "source_files__data_base"
+        )
+
+        queryset = Composition.objects.all()
+
         if data_base:
-            return Composition.objects.filter(source_files__data_base=data_base).prefetch_related('source_files')
-        else:
-            return Composition.objects.prefetch_related('source_files')
+            queryset = queryset.filter(
+                source_files__data_base=data_base
+            )
+
+        return (
+            queryset
+            .select_related(
+                "generic_item",
+                "generic_description",
+                "unit",
+            )
+            .prefetch_related(
+                "source_files",
+                "equipments__generic_item",
+                "equipments__generic_description",
+                "equipments__unit",
+                "workmen__generic_item",
+                "workmen__generic_description",
+                "workmen__unit",
+                "materials__generic_item",
+                "materials__generic_description",
+                "materials__unit",
+                "activities__generic_item",
+                "activities__generic_description",
+                "activities__unit",
+                "transports__generic_item",
+                "transports__generic_description",
+                "transports__unit",
+                "transports__proprietary_item",
+            )
+        )

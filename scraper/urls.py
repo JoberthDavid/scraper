@@ -18,19 +18,100 @@ from django.contrib import admin
 
 from django.urls import include, path
 from rest_framework import routers
-from core.api.viewsets import SourceFileViewSet, GenericItemViewSet, CompositionItemViewSet, EquipmentItemViewSet, WorkmanItemViewSet, MaterialItemViewSet, UnitViewSet, MonetaryValueViewSet, CompositionViewSet
+from core.api.viewsets import (
+    SourceFileViewSet,
+    GenericItemViewSet,
+    CompositionItemViewSet,
+    EquipmentItemViewSet,
+    WorkmanItemViewSet,
+    MaterialItemViewSet,
+    UnitViewSet,
+    MonetaryValueViewSet,
+    CompositionViewSet
+)
+from core.api.optimized_viewsets import (
+    CompositionActivityViewSet,
+    EquipmentCalculationViewSet,
+    WorkmanCalculationViewSet,
+    MaterialCalculationViewSet,
+    TransportCalculationViewSet,
+)
 
 
 router = routers.DefaultRouter()
-router.register(r'arquivos-base', SourceFileViewSet, basename='SourceFile')
-router.register(r'itens', GenericItemViewSet, basename='GenericItem')
-router.register(r'itens-composicoes', CompositionItemViewSet, basename='CompositionItem')
-router.register(r'itens-equipamentos', EquipmentItemViewSet, basename='EquipmentItem')
-router.register(r'itens-mao-de-obra', WorkmanItemViewSet, basename='WorkmanItem')
-router.register(r'itens-materiais', MaterialItemViewSet, basename='MaterialItem')
-router.register(r'unidades', UnitViewSet, basename='Unit')
-router.register(r'valores-monetarios', MonetaryValueViewSet, basename='MonetaryValue')
-router.register(r'composicoes', CompositionViewSet, basename='Composition')
+router.register(
+    r'arquivos-base',
+    SourceFileViewSet,
+    basename='SourceFile'
+    )
+router.register(
+    r'itens',
+    GenericItemViewSet,
+    basename='GenericItem'
+    )
+router.register(
+    r'itens-composicoes',
+    CompositionItemViewSet,
+    basename='CompositionItem'
+    )
+router.register(
+    r'itens-equipamentos',
+    EquipmentItemViewSet,
+    basename='EquipmentItem'
+    )
+router.register(
+    r'itens-mao-de-obra',
+    WorkmanItemViewSet,
+    basename='WorkmanItem'
+    )
+router.register(
+    r'itens-materiais',
+    MaterialItemViewSet,
+    basename='MaterialItem'
+    )
+router.register(
+    r'unidades',
+    UnitViewSet,
+    basename='Unit'
+    )
+router.register(
+    r'valores-monetarios',
+    MonetaryValueViewSet,
+    basename='MonetaryValue'
+    )
+router.register(
+    r'composicoes',
+    CompositionViewSet,
+    basename='Composition'
+    )
+
+
+router.register(
+    r"compositions/activities",
+    CompositionActivityViewSet,
+    basename="composition-activity",
+)
+router.register(
+    r"compositions/equipments",
+    EquipmentCalculationViewSet,
+    basename="composition-equipment",
+)
+router.register(
+    r"compositions/workmen",
+    WorkmanCalculationViewSet,
+    basename="composition-workman",
+)
+router.register(
+    r"compositions/materials",
+    MaterialCalculationViewSet,
+    basename="composition-material",
+)
+router.register(
+    r"compositions/transports",
+    TransportCalculationViewSet,
+    basename="composition-transport",
+)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),

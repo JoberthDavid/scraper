@@ -15,5 +15,5 @@ class MonetaryValuePagination(LimitOffsetPagination):
     retornados pelo carregamento completo do cache.
     """
 
-    default_limit = 10000
-    max_limit = 10000
+    default_limit = 100
+    max_limit = 100

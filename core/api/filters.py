@@ -161,68 +161,18 @@ class SourceFileFilter(django_filters.FilterSet):
             "status",
         ]
 
-
 class GenericItemFilter(django_filters.FilterSet):
-    """
-    Filtros para itens genéricos.
-
-    ```
-    Compatibilidade atual:
-
-        code=E
-        code=P98
-        code=M00
-
-    continua significando busca por prefixo.
-
-    Novos filtros:
-
-        code__exact
-        code__in
-        code__startswith
-    """
 
     source_files = django_filters.DateFilter(
         field_name="source_files__data_base",
         lookup_expr="exact",
     )
 
-    source_files__in = django_filters.BaseInFilter(
-        field_name="source_files__data_base",
-        lookup_expr="in",
-    )
-
     code = django_filters.CharFilter(
-        field_name="code",
-        lookup_expr="startswith",
-    )
-
-    code__exact = django_filters.CharFilter(
-        field_name="code",
-        lookup_expr="exact",
-    )
-
-    code__in = django_filters.BaseInFilter(
-        field_name="code",
-        lookup_expr="in",
-    )
-
-    code__startswith = django_filters.CharFilter(
-        field_name="code",
         lookup_expr="startswith",
     )
 
     descriptions = django_filters.CharFilter(
-        field_name="descriptions__description",
-        lookup_expr="startswith",
-    )
-
-    descriptions__exact = django_filters.CharFilter(
-        field_name="descriptions__description",
-        lookup_expr="exact",
-    )
-
-    descriptions__startswith = django_filters.CharFilter(
         field_name="descriptions__description",
         lookup_expr="startswith",
     )
@@ -232,75 +182,24 @@ class GenericItemFilter(django_filters.FilterSet):
         lookup_expr="startswith",
     )
 
-    descriptions__group__exact = django_filters.CharFilter(
-        field_name="descriptions__group",
-        lookup_expr="exact",
-    )
-
-    descriptions__group__in = django_filters.BaseInFilter(
-        field_name="descriptions__group",
-        lookup_expr="in",
-    )
-
-    descriptions__group__startswith = django_filters.CharFilter(
-        field_name="descriptions__group",
-        lookup_expr="startswith",
-    )
-
     class Meta:
         model = GenericItem
         fields = [
             "source_files",
-            "source_files__in",
             "code",
-            "code__exact",
-            "code__in",
-            "code__startswith",
             "descriptions",
-            "descriptions__exact",
-            "descriptions__startswith",
             "descriptions__group",
-            "descriptions__group__exact",
-            "descriptions__group__in",
-            "descriptions__group__startswith",
         ]
 
 
 class GenericDescriptionFilter(django_filters.FilterSet):
-    """
-    Filtros para descrições genéricas.
-
-    ```
-    Os filtros existentes por prefixo são preservados.
-    """
 
     source_files = django_filters.DateFilter(
         field_name="source_files__data_base",
         lookup_expr="exact",
     )
 
-    source_files__in = django_filters.BaseInFilter(
-        field_name="source_files__data_base",
-        lookup_expr="in",
-    )
-
     group = django_filters.CharFilter(
-        field_name="group",
-        lookup_expr="startswith",
-    )
-
-    group__exact = django_filters.CharFilter(
-        field_name="group",
-        lookup_expr="exact",
-    )
-
-    group__in = django_filters.BaseInFilter(
-        field_name="group",
-        lookup_expr="in",
-    )
-
-    group__startswith = django_filters.CharFilter(
-        field_name="group",
         lookup_expr="startswith",
     )
 
@@ -309,33 +208,7 @@ class GenericDescriptionFilter(django_filters.FilterSet):
         lookup_expr="startswith",
     )
 
-    generic_item__exact = django_filters.CharFilter(
-        field_name="generic_items__code",
-        lookup_expr="exact",
-    )
-
-    generic_item__in = django_filters.BaseInFilter(
-        field_name="generic_items__code",
-        lookup_expr="in",
-    )
-
-    generic_item__startswith = django_filters.CharFilter(
-        field_name="generic_items__code",
-        lookup_expr="startswith",
-    )
-
     description = django_filters.CharFilter(
-        field_name="description",
-        lookup_expr="startswith",
-    )
-
-    description__exact = django_filters.CharFilter(
-        field_name="description",
-        lookup_expr="exact",
-    )
-
-    description__startswith = django_filters.CharFilter(
-        field_name="description",
         lookup_expr="startswith",
     )
 
@@ -343,18 +216,9 @@ class GenericDescriptionFilter(django_filters.FilterSet):
         model = GenericDescription
         fields = [
             "source_files",
-            "source_files__in",
             "group",
-            "group__exact",
-            "group__in",
-            "group__startswith",
             "generic_item",
-            "generic_item__exact",
-            "generic_item__in",
-            "generic_item__startswith",
             "description",
-            "description__exact",
-            "description__startswith",
         ]
 
 
@@ -528,14 +392,9 @@ class CompositionFilter(django_filters.FilterSet):
     são acrescentadas formas explícitas de consulta.
     """
 
-    source_files__data_base = django_filters.DateFilter(
+    data_base = django_filters.DateFilter(
         field_name="source_files__data_base",
         lookup_expr="exact",
-    )
-
-    source_files__data_base__in = django_filters.BaseInFilter(
-        field_name="source_files__data_base",
-        lookup_expr="in",
     )
 
     composition_group = django_filters.CharFilter(
@@ -606,8 +465,7 @@ class CompositionFilter(django_filters.FilterSet):
     class Meta:
         model = Composition
         fields = [
-            "source_files__data_base",
-            "source_files__data_base__in",
+            "data_base",
             "composition_group",
             "composition_group__exact",
             "composition_group__in",
