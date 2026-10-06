@@ -54,6 +54,7 @@ from core.models import (
 )
 
 from core.usefuls.choices import (
+    NAO_APLICAVEL,
     SICRO,
     GOIAS,
     ONERADO,
@@ -981,7 +982,7 @@ class MonetaryValuePreparerTests(TestCase):
 
         self.assertEqual(
             value.type_system,
-            self.source_file.type_system,
+            NAO_APLICAVEL,
         )
 
         self.assertEqual(

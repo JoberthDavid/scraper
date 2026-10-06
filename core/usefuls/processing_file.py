@@ -112,12 +112,12 @@ class MonetaryValuePreparer:
         for index, row in data_frame.iterrows():
             monetary_value_bulk_create_list.append( MonetaryValue(
                 generic_item = related_items[row[df_code]],
-                source_file = source_file,
+                source_file=source_file,
+                type_system = NAO_APLICAVEL if group == MATERIAL else source_file.type_system,
                 unit = units[row[df_unit]],
                 monetary_value = row[monetary_value],
                 classification = classification,
                 group = group,
-                type_system = source_file.type_system,
                 )
             )
         MonetaryValue.objects.bulk_create( monetary_value_bulk_create_list, ignore_conflicts=True )

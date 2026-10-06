@@ -48,7 +48,7 @@ class GenericDescriptionViewSet(ModelViewSet):
     ordering = ['group', 'code', 'description']
     filterset_class = GenericDescriptionFilter
 
-    def get_queryset(self):           
+    def get_queryset(self):
         return GenericDescription.objects.prefetch_related('source_files').all()
 
 
